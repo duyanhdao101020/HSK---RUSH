@@ -296,6 +296,17 @@ main{ flex:1; padding:4px 18px 24px; }
 .nav-btn.primary{ background:var(--accent-dark); border-color:var(--accent-dark); color:#fff; }
 .nav-btn:disabled{ opacity:.4; }
 
+.memory-row{
+  display:flex; align-items:center; gap:10px; margin-top:14px;
+}
+.mem-btn{
+  flex:1; padding:13px; border-radius:12px; border:1px solid transparent;
+  font-size:14px; cursor:pointer; font-weight:700;
+}
+.mem-btn:active{ transform:scale(.97); }
+.mem-btn.unknown{ background:var(--accent-soft); border-color:var(--accent-dark); color:var(--accent-dark); }
+.mem-btn.known{ background:var(--jade-soft); border-color:var(--jade-dark); color:var(--jade-dark); }
+
 /* ---------- quiz ---------- */
 .quiz-top{ display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-muted); margin-bottom:10px;}
 .score-pill{ background:var(--jade-soft); color:var(--jade-dark); padding:4px 10px; border-radius:999px; font-weight:600; }
@@ -374,6 +385,17 @@ main{ flex:1; padding:4px 18px 24px; }
 .wrong-item .wi-info{ text-align:right; min-width:0; }
 .wrong-item .mn{ font-size:12.5px; color:var(--text-muted); }
 .wrong-item .wi-tag{ font-size:10.5px; color:var(--accent-dark); font-weight:600; margin-top:2px; }
+.wi-badges{ display:flex; gap:5px; justify-content:flex-end; margin-top:5px; flex-wrap:wrap; }
+.wi-badge{
+  font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap;
+}
+.wi-badge.star{ background:var(--accent-soft); color:var(--accent-dark); }
+.wi-badge.miss{ background:rgba(197,120,90,0.16); color:#B5644A; }
+.wi-unstar{
+  flex-shrink:0; background:none; border:none; cursor:pointer;
+  font-size:18px; color:var(--accent-dark); padding:4px 2px 4px 8px;
+}
+.wi-unstar:active{ transform:scale(.9); }
 
 .empty-state{ text-align:center; padding:60px 20px; color:var(--text-muted); }
 .empty-state .em-hz{ font-family:'Noto Serif SC',serif; font-size:44px; color:var(--gold); margin-bottom:10px;}
@@ -536,6 +558,17 @@ window.HSK_DATA = {"1":[{"id":"1-1","level":1,"bai":1,"word":"你","pos":"đại
 </script>
 <script>
 /* ===================== storage ===================== */
+/* -----------------------------------------------------------------------
+   QUY ƯỚC KEY LƯU TRỮ — ĐỌC TRƯỚC KHI SỬA
+   Tiến độ học của người dùng (sao đánh dấu, đang học tới đâu, từ đã nhớ...)
+   nằm trong localStorage của trình duyệt, gắn với ĐỊA CHỈ WEB (domain),
+   không phải với file index.html. Vì vậy mỗi lần thay file index.html mới
+   lên CÙNG một địa chỉ, dữ liệu này KHÔNG bị mất — trừ khi tên các key
+   dưới đây bị đổi. Nên: KHÔNG đổi tên các hằng số *_KEY này khi cập nhật
+   sau này. Nếu cần đổi cấu trúc dữ liệu, hãy tăng số version trong tên key
+   (vd: _v2 -> _v3) và viết thêm bước đọc dữ liệu ở key cũ để chuyển sang,
+   thay vì xoá thẳng.
+----------------------------------------------------------------------- */
 const Store = (() => {
   let mem = {};
   let ok = true;
@@ -566,6 +599,8 @@ const Store = (() => {
 const STARS_KEY = 'hsk_stars_v1';
 const PROGRESS_KEY = 'hsk_progress_v2';
 const SEEN_KEY = 'hsk_seen_v1';
+const KNOWN_KEY = 'hsk_known_v1';
+const WRONG_KEY = 'hsk_wrong_v1';
 
 function getStars() {
   const raw = Store.get(STARS_KEY, []);
@@ -599,11 +634,53 @@ function clearProgress(key) {
   Store.set(PROGRESS_KEY, all);
 }
 
+/* Words the learner marked "Đã nhớ" while studying flashcards — this is what
+   the real per-level progress bar on the home screen counts now. */
+function getKnownSet() {
+  const raw = Store.get(KNOWN_KEY, []);
+  return new Set(Array.isArray(raw) ? raw : []);
+}
+function markKnown(id) {
+  const s = getKnownSet();
+  if (s.has(id)) return;
+  s.add(id);
+  Store.set(KNOWN_KEY, Array.from(s));
+}
+function unmarkKnown(id) {
+  const s = getKnownSet();
+  if (!s.has(id)) return;
+  s.delete(id);
+  Store.set(KNOWN_KEY, Array.from(s));
+}
+
 /* words the learner has actually flipped through in Study mode — used for the
    real per-level progress bar on the home screen (not related to stars) */
 function getSeenSet() {
   const raw = Store.get(SEEN_KEY, []);
   return new Set(Array.isArray(raw) ? raw : []);
+}
+
+/* Number of times each word has been answered wrong in Trắc nghiệm / Gõ chữ.
+   Any word with a count here automatically shows up in Sổ từ khó, alongside
+   the ones the learner starred by hand — this is how the two are told apart. */
+function getWrongCounts() {
+  const raw = Store.get(WRONG_KEY, {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+function getWrongCount(id) {
+  const counts = getWrongCounts();
+  return counts[id] || 0;
+}
+function incrementWrong(id) {
+  const counts = getWrongCounts();
+  counts[id] = (counts[id] || 0) + 1;
+  Store.set(WRONG_KEY, counts);
+}
+function clearWrong(id) {
+  const counts = getWrongCounts();
+  if (!(id in counts)) return;
+  delete counts[id];
+  Store.set(WRONG_KEY, counts);
 }
 function markSeen(id) {
   const s = getSeenSet();
@@ -868,7 +945,7 @@ function renderTopbar() {
     </div>
     <div class="spacer"></div>
     ${state.screen === 'home' ? `
-      <button class="icon-btn" id="btn-star" title="Từ đã đánh dấu">★</button>
+      <button class="icon-btn" id="btn-star" title="Sổ từ khó">★</button>
     ` : ''}
   `;
   const back = document.getElementById('btn-back');
@@ -882,9 +959,9 @@ function renderTopbar() {
 function titleFor() {
   if (state.screen === 'home') return 'HSK Rush';
   if (state.screen === 'level') return `HSK ${state.level}`;
-  if (state.screen === 'starred') return 'Từ đã đánh dấu';
+  if (state.screen === 'starred') return 'Sổ từ khó';
   if (state.level) return `HSK ${state.level}`;
-  if (['mcq', 'type', 'result'].includes(state.screen)) return 'Từ đã đánh dấu';
+  if (['study', 'mcq', 'type', 'result'].includes(state.screen)) return 'Sổ từ khó';
   return 'HSK Rush';
 }
 function subtitleFor() {
@@ -1008,6 +1085,8 @@ function renderLevel() {
       go('level', { level: lv, bai: b });
     };
   });
+  const activeChip = document.querySelector('#chip-row .chip.active');
+  if (activeChip) activeChip.scrollIntoView({ block: 'nearest', inline: 'center' });
   mainEl.querySelectorAll('.mode-card').forEach(card => {
     card.onclick = () => startMode(card.dataset.mode);
   });
@@ -1055,9 +1134,10 @@ function startMode(mode) {
 /* ===================== STUDY (flashcards) ===================== */
 let flipped = false;
 function renderStudy() {
-  const words = wordsFor(state.level, state.bai);
+  const words = state.level ? wordsFor(state.level, state.bai) : (state.studyWords || []);
   const idx = Math.max(0, Math.min(state.cardIdx, words.length - 1));
   const w = words[idx];
+  if (!w) { toast('Không có từ nào để học'); go(state.level ? 'level' : 'starred', { level: state.level }); return; }
   const stars = getStars();
   const isStar = stars.has(w.id);
   const pct = Math.round(((idx + 1) / words.length) * 100);
@@ -1098,7 +1178,7 @@ function renderStudy() {
     </div>
   `;
 
-  const studyKey = progressKey(state.level, state.bai, 'study');
+  const studyKey = state.level ? progressKey(state.level, state.bai, 'study') : null;
 
   document.getElementById('flash-card').onclick = (e) => {
     if (e.target.closest('.star-btn')) return;
@@ -1116,26 +1196,26 @@ function renderStudy() {
   document.getElementById('jump-trigger').onclick = () => {
     openJumpSheet(words, idx, (i) => {
       flipped = false;
-      saveProgress(studyKey, { idx: i, total: words.length });
+      if (studyKey) saveProgress(studyKey, { idx: i, total: words.length });
       go('study', { cardIdx: i });
     });
   };
   document.getElementById('prev-btn').onclick = () => {
     flipped = false;
     const newIdx = Math.max(0, idx - 1);
-    saveProgress(studyKey, { idx: newIdx, total: words.length });
+    if (studyKey) saveProgress(studyKey, { idx: newIdx, total: words.length });
     go('study', { cardIdx: newIdx });
   };
   document.getElementById('next-btn').onclick = () => {
     flipped = false;
     if (idx === words.length - 1) {
-      clearProgress(studyKey);
+      if (studyKey) clearProgress(studyKey);
       toast('Đã học hết! Bắt đầu lại từ đầu.');
-      go('level', { level: state.level });
+      go(state.level ? 'level' : 'starred', { level: state.level });
       return;
     }
     const newIdx = idx + 1;
-    saveProgress(studyKey, { idx: newIdx, total: words.length });
+    if (studyKey) saveProgress(studyKey, { idx: newIdx, total: words.length });
     go('study', { cardIdx: newIdx });
   };
 }
@@ -1214,7 +1294,7 @@ function answerMCQ(btn, w, q) {
   if (!isCorrect) stampEl.classList.add('wrong');
 
   if (isCorrect) q.correct++;
-  else q.wrong.push(w);
+  else { q.wrong.push(w); incrementWrong(w.id); }
 
   setTimeout(() => {
     q.idx++;
@@ -1288,13 +1368,14 @@ function renderType() {
       q.answered = true;
       q.lastCorrect = correct;
       q.lastInput = val;
-      if (correct) q.correct++; else q.wrong.push(w);
+      if (correct) q.correct++; else { q.wrong.push(w); incrementWrong(w.id); }
       speak(w.word, audioPathFor(w, false));
       renderType();
     }
     document.getElementById('check-btn').onclick = submit;
     document.getElementById('skip-btn').onclick = () => {
       q.wrong.push(w);
+      incrementWrong(w.id);
       q.answered = true;
       q.lastCorrect = false;
       q.lastInput = '';
@@ -1357,53 +1438,149 @@ function renderResult() {
   };
 }
 
-/* ===================== STARRED ===================== */
-function renderStarred() {
+/* ===================== STARRED ("Sổ từ khó") ===================== */
+let starredFilterLevel = 'all';
+let starredSampleMode = 'all'; // 'all' | 'sample' (10-20 random words)
+
+function starredSubset() {
   const stars = getStars();
+  const wrongCounts = getWrongCounts();
   const all = [];
-  for (let lv = 1; lv <= 6; lv++) levelWords(lv).forEach(w => { if (stars.has(w.id)) all.push(w); });
+  for (let lv = 1; lv <= 6; lv++) {
+    levelWords(lv).forEach(w => {
+      if (stars.has(w.id) || wrongCounts[w.id]) all.push(w);
+    });
+  }
+  const filtered = starredFilterLevel === 'all' ? all : all.filter(w => w.level === starredFilterLevel);
+  return { all, filtered };
+}
+
+function removeFromDifficultBook(id) {
+  const stars = getStars();
+  if (stars.has(id)) { stars.delete(id); saveStars(stars); }
+  clearWrong(id);
+}
+
+function starredPool(filtered) {
+  if (starredSampleMode !== 'sample') return filtered;
+  const n = Math.min(filtered.length, Math.floor(Math.random() * 11) + 10); // 10-20
+  return shuffle(filtered).slice(0, n);
+}
+
+function renderStarred() {
+  const { all, filtered } = starredSubset();
 
   if (all.length === 0) {
     mainEl.innerHTML = `
       <div class="empty-state">
         <div class="em-hz">★</div>
-        <div>Chưa có từ nào được đánh dấu.<br/>Nhấn ☆ trên thẻ từ vựng để lưu từ khó.</div>
+        <div>Sổ từ khó đang trống.<br/>Nhấn ☆ trên thẻ từ vựng để lưu, hoặc từ nào bạn làm sai khi ôn tập cũng sẽ tự động xuất hiện ở đây.</div>
       </div>`;
     return;
   }
 
+  const presentLevels = Array.from(new Set(all.map(w => w.level))).sort((a, b) => a - b);
+  let chips = `<div class="chip ${starredFilterLevel === 'all' ? 'active' : ''}" data-lv="all">Tất cả</div>`;
+  presentLevels.forEach(lv => {
+    chips += `<div class="chip ${starredFilterLevel === lv ? 'active' : ''}" data-lv="${lv}">HSK ${lv}</div>`;
+  });
+
+  const sampleLabel = starredSampleMode === 'sample' ? `${Math.min(filtered.length, 20)}` : '';
+
   mainEl.innerHTML = `
-    <div class="section-label">${all.length} từ đã đánh dấu</div>
+    <div class="section-label">${all.length} từ trong sổ</div>
+    <div class="chip-row" id="starred-chip-row">${chips}</div>
+    <div class="chip-row" id="starred-sample-row">
+      <div class="chip ${starredSampleMode === 'all' ? 'active' : ''}" data-mode="all">Ôn tất cả (${filtered.length})</div>
+      <div class="chip ${starredSampleMode === 'sample' ? 'active' : ''}" data-mode="sample">10-20 từ ngẫu nhiên</div>
+    </div>
     <div class="mode-list">
-      <div class="mode-card" id="quiz-starred">
+      <div class="mode-card" id="starred-study" ${filtered.length === 0 ? 'style="opacity:.5;pointer-events:none;"' : ''}>
+        <div class="m-icon">卡</div>
+        <div class="m-txt"><b>Học flashcard</b><span>Lật thẻ, nghe phát âm</span></div>
+        <div class="m-arrow">›</div>
+      </div>
+      <div class="mode-card" id="starred-mcq" ${filtered.length === 0 ? 'style="opacity:.5;pointer-events:none;"' : ''}>
         <div class="m-icon">选</div>
-        <div class="m-txt"><b>Trắc nghiệm từ đã lưu</b><span>Ôn nhanh ${all.length} từ khó</span></div>
+        <div class="m-txt"><b>Trắc nghiệm</b><span>Chọn đúng chữ Hán theo nghĩa</span></div>
+        <div class="m-arrow">›</div>
+      </div>
+      <div class="mode-card" id="starred-type" ${filtered.length === 0 ? 'style="opacity:.5;pointer-events:none;"' : ''}>
+        <div class="m-icon">写</div>
+        <div class="m-txt"><b>Gõ chữ</b><span>Gõ chữ Hán từ nghĩa & âm Hán Việt</span></div>
         <div class="m-arrow">›</div>
       </div>
     </div>
     <div class="wrong-list" style="margin-top:16px;">
-      ${all.map(w => `
+      ${filtered.map(w => {
+        const isStar = getStars().has(w.id);
+        const wc = getWrongCount(w.id);
+        const badges = `
+          ${isStar ? `<span class="wi-badge star">★ Tự đánh dấu</span>` : ''}
+          ${wc > 0 ? `<span class="wi-badge miss">✕ Sai ${wc} lần</span>` : ''}
+        `;
+        return `
         <div class="wrong-item" data-id="${w.id}" style="cursor:pointer;">
           <div class="hz">${w.word}</div>
           <div class="wi-info">
             <div class="mn">${w.meaning}</div>
             <div class="wi-tag">HSK${w.level} · Bài ${w.bai}</div>
+            <div class="wi-badges">${badges}</div>
           </div>
-        </div>`).join('')}
+          <button class="wi-unstar" data-id="${w.id}" title="Xoá khỏi sổ từ khó">✕</button>
+        </div>`;
+      }).join('')}
     </div>
   `;
-  document.getElementById('quiz-starred').onclick = () => {
+
+  document.getElementById('starred-chip-row').querySelectorAll('.chip').forEach(chip => {
+    chip.onclick = () => {
+      starredFilterLevel = chip.dataset.lv === 'all' ? 'all' : Number(chip.dataset.lv);
+      renderStarred();
+    };
+  });
+  document.getElementById('starred-sample-row').querySelectorAll('.chip').forEach(chip => {
+    chip.onclick = () => {
+      starredSampleMode = chip.dataset.mode;
+      renderStarred();
+    };
+  });
+
+  document.getElementById('starred-study').onclick = () => {
+    const pool = starredPool(filtered);
+    if (pool.length === 0) { toast('Không có từ nào để học'); return; }
+    flipped = false;
+    go('study', { mode: 'study', level: null, bai: 'all', studyWords: shuffle(pool), cardIdx: 0 });
+  };
+  document.getElementById('starred-mcq').onclick = () => {
+    const pool = starredPool(filtered);
+    if (pool.length === 0) { toast('Không có từ nào để ôn'); return; }
     go('mcq', {
-      mode: 'mcq',
-      level: null,
-      bai: 'all',
-      quiz: { words: shuffle(all), idx: 0, correct: 0, wrong: [], answered: false }
+      mode: 'mcq', level: null, bai: 'all',
+      quiz: { words: shuffle(pool), idx: 0, correct: 0, wrong: [], answered: false }
     });
   };
+  document.getElementById('starred-type').onclick = () => {
+    const pool = starredPool(filtered);
+    if (pool.length === 0) { toast('Không có từ nào để ôn'); return; }
+    go('type', {
+      mode: 'type', level: null, bai: 'all',
+      quiz: { words: shuffle(pool), idx: 0, correct: 0, wrong: [], answered: false }
+    });
+  };
+
   mainEl.querySelectorAll('.wrong-item').forEach(item => {
-    item.onclick = () => {
+    item.onclick = (e) => {
+      if (e.target.closest('.wi-unstar')) return;
       const w = findWordById(item.dataset.id);
       if (w) speak(w.word, audioPathFor(w, false));
+    };
+  });
+  mainEl.querySelectorAll('.wi-unstar').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      removeFromDifficultBook(btn.dataset.id);
+      renderStarred();
     };
   });
 }
