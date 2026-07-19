@@ -463,6 +463,24 @@ main{ flex:1; padding:4px 18px 24px; }
 .resume-msg b{ color:var(--gold); }
 .resume-actions{ display:flex; gap:10px; }
 
+.onboard-field{ margin-bottom:16px; }
+.onboard-label{
+  display:block; font-size:12.5px; font-weight:600; color:var(--text);
+  margin-bottom:8px;
+}
+
+.streak-msg{ margin:0 0 8px; font-size:13.5px; line-height:1.5; color:var(--text-muted); max-width:92%; }
+.streak-msg b{ color:var(--accent-dark); }
+.streak-msg.success{ color:var(--jade-dark); }
+.streak-msg.success b{ color:var(--jade-dark); }
+.streak-bar{
+  height:6px; border-radius:3px; background:rgba(74,53,72,0.1); overflow:hidden; margin-bottom:8px; max-width:92%;
+}
+.streak-bar i{ display:block; height:100%; background:var(--jade); border-radius:3px; }
+.streak-meta{
+  display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); font-weight:600; max-width:92%;
+}
+
 /* ---------- footer brand credit ---------- */
 .brand-footer{
   display:flex; align-items:center; justify-content:center; gap:10px;
@@ -605,6 +623,69 @@ const PROGRESS_KEY = 'hsk_progress_v2';
 const SEEN_KEY = 'hsk_seen_v1';
 const KNOWN_KEY = 'hsk_known_v1';
 const WRONG_KEY = 'hsk_wrong_v1';
+const NAME_KEY = 'hsk_name_v1';
+const GOAL_KEY = 'hsk_goal_v1';
+const DAILY_KEY = 'hsk_daily_v1';
+const STREAK_KEY = 'hsk_streak_v1';
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function yesterdayStr() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function getName() { return Store.get(NAME_KEY, ''); }
+function setName(n) { Store.set(NAME_KEY, n); }
+function getGoal() { return Store.get(GOAL_KEY, 0); }
+function setGoal(n) { Store.set(GOAL_KEY, n); }
+
+/* Từ khác nhau học viên đã chạm tới hôm nay (lật thẻ, hoặc trả lời trắc
+   nghiệm/gõ chữ dù đúng hay sai) — dùng để tính mục tiêu mỗi ngày & streak. */
+function getDailyProgress() {
+  const raw = Store.get(DAILY_KEY, null);
+  const today = todayStr();
+  if (!raw || typeof raw !== 'object' || raw.date !== today || !Array.isArray(raw.ids)) {
+    return { date: today, ids: [] };
+  }
+  return raw;
+}
+function getStreak() {
+  const raw = Store.get(STREAK_KEY, { count: 0, lastDate: null });
+  return (raw && typeof raw === 'object') ? raw : { count: 0, lastDate: null };
+}
+/* Streak hiển thị: nếu khoảng cách quá 1 ngày kể từ lần đạt mục tiêu gần nhất
+   thì coi như về 0 — không cảnh báo, không thông báo, chỉ lặng lẽ hiện lại từ đầu. */
+function effectiveStreakCount() {
+  const s = getStreak();
+  const today = todayStr();
+  const yest = yesterdayStr();
+  if (s.lastDate === today || s.lastDate === yest) return s.count;
+  return 0;
+}
+function markDailyTouch(id) {
+  const progress = getDailyProgress();
+  if (!progress.ids.includes(id)) progress.ids.push(id);
+  Store.set(DAILY_KEY, progress);
+
+  const goal = getGoal();
+  if (!goal || progress.ids.length < goal) return;
+  const s = getStreak();
+  const today = todayStr();
+  if (s.lastDate === today) return; // đã tính hôm nay rồi
+  const yest = yesterdayStr();
+  const newCount = (s.lastDate === yest) ? s.count + 1 : 1;
+  Store.set(STREAK_KEY, { count: newCount, lastDate: today });
+  const name = getName();
+  toast(`🎉 Chúc mừng ${name ? name + ', ' : ''}đạt streak ${newCount} ngày liên tiếp!`);
+}
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s == null ? '' : String(s);
+  return div.innerHTML;
+}
 
 function getStars() {
   const raw = Store.get(STARS_KEY, []);
@@ -833,13 +914,15 @@ function toast(msg) {
 }
 
 /* ===================== sheet overlay ===================== */
-function showSheet(innerHtml) {
+function showSheet(innerHtml, dismissible = true) {
   closeSheet();
   const back = document.createElement('div');
   back.className = 'sheet-backdrop';
   back.id = 'sheet-backdrop';
   back.innerHTML = `<div class="sheet">${innerHtml}</div>`;
-  back.addEventListener('click', (e) => { if (e.target === back) closeSheet(); });
+  if (dismissible) {
+    back.addEventListener('click', (e) => { if (e.target === back) closeSheet(); });
+  }
   document.body.appendChild(back);
   requestAnimationFrame(() => back.classList.add('show'));
 }
@@ -885,6 +968,57 @@ function openResumeSheet(msg, onResume, onRestart) {
   `);
   document.getElementById('resume-continue').onclick = () => { closeSheet(); onResume(); };
   document.getElementById('resume-restart').onclick = () => { closeSheet(); onRestart(); };
+}
+
+const GOAL_PRESETS = [10, 15, 20, 30];
+function showGoalNameSheet(forced) {
+  const currentName = getName();
+  const currentGoal = getGoal() || 15;
+  const isPreset = GOAL_PRESETS.includes(currentGoal);
+  showSheet(`
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${forced ? 'Chào mừng đến với HSK Rush!' : 'Chỉnh sửa tên & mục tiêu'}</div>
+    <div class="onboard-field">
+      <label class="onboard-label">Bạn tên gì?</label>
+      <input id="onboard-name" class="type-input" style="font-size:18px;width:100%;" placeholder="Nhập tên của bạn…" value="${escapeHtml(currentName)}" />
+    </div>
+    <div class="onboard-field">
+      <label class="onboard-label">Mục tiêu mỗi ngày (số từ)</label>
+      <div class="chip-row" id="onboard-goal-chips">
+        ${GOAL_PRESETS.map(g => `<div class="chip ${currentGoal === g ? 'active' : ''}" data-goal="${g}">${g} từ</div>`).join('')}
+      </div>
+      <input id="onboard-goal-custom" type="number" min="1" class="type-input" style="font-size:16px;width:100%;margin-top:8px;" placeholder="Hoặc nhập số khác" value="${isPreset ? '' : currentGoal}" />
+    </div>
+    <button class="nav-btn primary" id="onboard-submit" style="width:100%;margin-top:16px;">${forced ? 'Bắt đầu học' : 'Lưu thay đổi'}</button>
+  `, !forced);
+
+  let selectedGoal = currentGoal;
+  document.querySelectorAll('#onboard-goal-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      selectedGoal = Number(chip.dataset.goal);
+      document.getElementById('onboard-goal-custom').value = '';
+      document.querySelectorAll('#onboard-goal-chips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    };
+  });
+  document.getElementById('onboard-goal-custom').addEventListener('input', (e) => {
+    const v = Number(e.target.value);
+    if (v > 0) {
+      selectedGoal = v;
+      document.querySelectorAll('#onboard-goal-chips .chip').forEach(c => c.classList.remove('active'));
+    }
+  });
+  document.getElementById('onboard-submit').onclick = () => {
+    const nameVal = document.getElementById('onboard-name').value.trim();
+    const customVal = Number(document.getElementById('onboard-goal-custom').value);
+    const finalGoal = customVal > 0 ? customVal : selectedGoal;
+    if (!nameVal) { toast('Nhập tên của bạn trước đã nhé'); return; }
+    if (!finalGoal || finalGoal < 1) { toast('Chọn mục tiêu hợp lệ nhé'); return; }
+    setName(nameVal);
+    setGoal(finalGoal);
+    closeSheet();
+    render();
+  };
 }
 
 /* ===================== router / state ===================== */
@@ -990,11 +1124,34 @@ function onBack() {
 /* ===================== HOME ===================== */
 function renderHome() {
   const seen = getSeenSet();
+  const name = getName();
+  const goal = getGoal();
+  const daily = getDailyProgress();
+  const todayCount = daily.ids.length;
+  const streak = effectiveStreakCount();
+  const goalMetToday = goal > 0 && todayCount >= goal;
+  const remaining = goal > 0 ? Math.max(0, goal - todayCount) : 0;
+  const pct = goal > 0 ? Math.min(100, Math.round((todayCount / goal) * 100)) : 0;
+
   let html = `
-    <div class="hero">
+    <div class="hero" id="hero-box">
       <div class="hz-big">学</div>
-      <h1>Ôn luyện HSK mọi lúc</h1>
-      <p>Học từ vựng theo bài, nghe phát âm, và tự kiểm tra bằng trắc nghiệm hoặc gõ chữ Hán — ngay trên điện thoại.</p>
+      ${name ? `
+        <h1>Chào ${escapeHtml(name)} 👋</h1>
+        <p class="streak-msg ${goalMetToday ? 'success' : ''}">
+          ${goalMetToday
+            ? `🎉 Đạt streak <b>${streak} ngày</b> liên tiếp rồi, giỏi quá!`
+            : `Còn <b>${remaining} từ</b> nữa để hoàn thành mục tiêu hôm nay 💪`}
+        </p>
+        <div class="streak-bar"><i style="width:${pct}%"></i></div>
+        <div class="streak-meta">
+          <span>${todayCount}/${goal} từ hôm nay</span>
+          <span>🔥 ${streak} ngày</span>
+        </div>
+      ` : `
+        <h1>Ôn luyện HSK mọi lúc</h1>
+        <p>Học từ vựng theo bài, nghe phát âm, và tự kiểm tra bằng trắc nghiệm hoặc gõ chữ Hán — ngay trên điện thoại.</p>
+      `}
     </div>
     <div class="section-label">Chọn cấp độ</div>
     <div class="level-grid">
@@ -1028,6 +1185,13 @@ function renderHome() {
   mainEl.querySelectorAll('.level-card').forEach(card => {
     card.onclick = () => go('level', { level: Number(card.dataset.lv), bai: 'all' });
   });
+  if (name) {
+    const heroBox = document.getElementById('hero-box');
+    if (heroBox) {
+      heroBox.style.cursor = 'pointer';
+      heroBox.onclick = () => showGoalNameSheet(false);
+    }
+  }
 }
 
 /* ===================== LEVEL DETAIL ===================== */
@@ -1146,6 +1310,7 @@ function renderStudy() {
   const isStar = stars.has(w.id);
   const pct = Math.round(((idx + 1) / words.length) * 100);
   markSeen(w.id);
+  markDailyTouch(w.id);
 
   mainEl.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--text-muted);margin-bottom:2px;">
@@ -1302,6 +1467,7 @@ function answerMCQ(btn, w, q) {
     }
   });
   speak(w.word, audioPathFor(w, false));
+  markDailyTouch(w.id);
   const stampEl = document.getElementById('stamp');
   stampEl.innerHTML = `<div class="stamp-ring">${isCorrect ? '对' : '×'}</div>`;
   stampEl.classList.add('show');
@@ -1394,6 +1560,7 @@ function renderType() {
       q.lastInput = val;
       if (correct) { q.correct++; removeFromDifficultBook(w.id); } else { q.wrong.push(w); incrementWrong(w.id); }
       speak(w.word, audioPathFor(w, false));
+      markDailyTouch(w.id);
       renderType();
     }
     document.getElementById('check-btn').onclick = submit;
@@ -1603,6 +1770,9 @@ function renderStarred() {
 
 /* ===================== init ===================== */
 render();
+if (!getName() || !getGoal()) {
+  showGoalNameSheet(true);
+}
 
 </script>
 </body>
