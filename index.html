@@ -667,8 +667,11 @@ function effectiveStreakCount() {
 }
 function markDailyTouch(id) {
   const progress = getDailyProgress();
-  if (!progress.ids.includes(id)) progress.ids.push(id);
-  Store.set(DAILY_KEY, progress);
+  const isNewTouch = !progress.ids.includes(id);
+  if (isNewTouch) {
+    progress.ids.push(id);
+    Store.set(DAILY_KEY, progress); // chỉ ghi khi thực sự có từ mới, tránh lưu trùng dữ liệu không đổi
+  }
 
   const goal = getGoal();
   if (!goal || progress.ids.length < goal) return;
@@ -784,7 +787,7 @@ function markSeen(id) {
 
 /* ===================== data helpers ===================== */
 const LEVEL_NAMES = {
-  1: 'Sơ cấp', 2: 'Sơ cấp', 3: 'Trung cấp',
+  1: 'Sơ cấp', 2: 'Sơ cấp', 3: 'Sơ cấp',
   4: 'Trung cấp', 5: 'Cao cấp', 6: 'Cao cấp'
 };
 
@@ -987,7 +990,7 @@ function showGoalNameSheet(forced) {
     <div class="sheet-handle"></div>
     <div class="sheet-title">${forced ? 'Chào mừng đến với HSK Rush!' : 'Chỉnh sửa tên & mục tiêu'}</div>
     <div class="onboard-field">
-      <label class="onboard-label">Con vợ tên gì?</label>
+      <label class="onboard-label">Người đẹp tên gì?</label>
       <input id="onboard-name" class="type-input" style="font-size:18px;width:100%;" placeholder="Nhập tên của bạn…" value="${escapeHtml(currentName)}" />
     </div>
     <div class="onboard-field">
@@ -1091,6 +1094,7 @@ function renderTopbar() {
     </div>
     <div class="spacer"></div>
     ${state.screen === 'home' ? `
+      <button class="icon-btn" id="btn-settings" title="Đổi tên / mục tiêu mỗi ngày">⚙️</button>
       <button class="icon-btn" id="btn-star" title="Sổ từ khó">★</button>
     ` : ''}
   `;
@@ -1098,6 +1102,8 @@ function renderTopbar() {
   if (back) back.onclick = onBack;
   const home = document.getElementById('btn-home');
   if (home) home.onclick = () => go('home');
+  const settingsBtn = document.getElementById('btn-settings');
+  if (settingsBtn) settingsBtn.onclick = () => showGoalNameSheet(false);
   const star = document.getElementById('btn-star');
   if (star) star.onclick = () => go('starred');
 }
@@ -1193,13 +1199,6 @@ function renderHome() {
   mainEl.querySelectorAll('.level-card').forEach(card => {
     card.onclick = () => go('level', { level: Number(card.dataset.lv), bai: 'all' });
   });
-  if (name) {
-    const heroBox = document.getElementById('hero-box');
-    if (heroBox) {
-      heroBox.style.cursor = 'pointer';
-      heroBox.onclick = () => showGoalNameSheet(false);
-    }
-  }
 }
 
 /* ===================== LEVEL DETAIL ===================== */
