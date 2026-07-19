@@ -686,6 +686,14 @@ function escapeHtml(s) {
   div.textContent = s == null ? '' : String(s);
   return div.innerHTML;
 }
+function praiseMsg() {
+  const name = getName() || 'bạn';
+  return `${name} được quá nhể 👏`;
+}
+function encourageMsg() {
+  const name = getName() || 'bạn';
+  return `Cố nữa lên ${name} ơiii 💪`;
+}
 
 function getStars() {
   const raw = Store.get(STARS_KEY, []);
@@ -979,7 +987,7 @@ function showGoalNameSheet(forced) {
     <div class="sheet-handle"></div>
     <div class="sheet-title">${forced ? 'Chào mừng đến với HSK Rush!' : 'Chỉnh sửa tên & mục tiêu'}</div>
     <div class="onboard-field">
-      <label class="onboard-label">Bạn tên gì?</label>
+      <label class="onboard-label">Con vợ tên gì?</label>
       <input id="onboard-name" class="type-input" style="font-size:18px;width:100%;" placeholder="Nhập tên của bạn…" value="${escapeHtml(currentName)}" />
     </div>
     <div class="onboard-field">
@@ -987,7 +995,7 @@ function showGoalNameSheet(forced) {
       <div class="chip-row" id="onboard-goal-chips">
         ${GOAL_PRESETS.map(g => `<div class="chip ${currentGoal === g ? 'active' : ''}" data-goal="${g}">${g} từ</div>`).join('')}
       </div>
-      <input id="onboard-goal-custom" type="number" min="1" class="type-input" style="font-size:16px;width:100%;margin-top:8px;" placeholder="Hoặc nhập số khác" value="${isPreset ? '' : currentGoal}" />
+      <input id="onboard-goal-custom" type="number" min="5" class="type-input" style="font-size:16px;width:100%;margin-top:8px;" placeholder="Hoặc nhập số khác" value="${isPreset ? '' : currentGoal}" />
     </div>
     <button class="nav-btn primary" id="onboard-submit" style="width:100%;margin-top:16px;">${forced ? 'Bắt đầu học' : 'Lưu thay đổi'}</button>
   `, !forced);
@@ -1013,7 +1021,7 @@ function showGoalNameSheet(forced) {
     const customVal = Number(document.getElementById('onboard-goal-custom').value);
     const finalGoal = customVal > 0 ? customVal : selectedGoal;
     if (!nameVal) { toast('Nhập tên của bạn trước đã nhé'); return; }
-    if (!finalGoal || finalGoal < 1) { toast('Chọn mục tiêu hợp lệ nhé'); return; }
+    if (!finalGoal || finalGoal < 5) { toast('Mục tiêu tối thiểu là 5 từ/ngày nhé'); return; }
     setName(nameVal);
     setGoal(finalGoal);
     closeSheet();
@@ -1468,6 +1476,7 @@ function answerMCQ(btn, w, q) {
   });
   speak(w.word, audioPathFor(w, false));
   markDailyTouch(w.id);
+  toast(isCorrect ? praiseMsg() : encourageMsg());
   const stampEl = document.getElementById('stamp');
   stampEl.innerHTML = `<div class="stamp-ring">${isCorrect ? '对' : '×'}</div>`;
   stampEl.classList.add('show');
@@ -1518,7 +1527,7 @@ function renderType() {
     </div>
     <div class="type-wrap">
       <input class="type-input hanzi" id="type-input" placeholder="Gõ chữ Hán…" autocomplete="off" autocorrect="off" autocapitalize="off" ${answered ? 'disabled' : ''} value="${answered ? (q.lastInput || '').replace(/"/g, '&quot;') : ''}" />
-      <div class="type-feedback ${answered ? (q.lastCorrect ? 'ok' : 'bad') : ''}" id="type-feedback">${answered ? (q.lastCorrect ? 'Chính xác! 对' : `Chưa đúng. Đáp án: ${w.word}${w.word_pinyin ? ` <em>(${w.word_pinyin})</em>` : ''}`) : ''}</div>
+      <div class="type-feedback ${answered ? (q.lastCorrect ? 'ok' : 'bad') : ''}" id="type-feedback">${answered ? (q.lastCorrect ? `${escapeHtml(praiseMsg())} 对` : `${escapeHtml(encourageMsg())} Đáp án: ${w.word}${w.word_pinyin ? ` <em>(${w.word_pinyin})</em>` : ''}`) : ''}</div>
       <div class="type-actions">
         ${!answered ? `
           <button class="nav-btn primary" id="check-btn" style="width:100%;">Kiểm tra</button>
