@@ -39,6 +39,32 @@
   --safe-t: env(safe-area-inset-top, 0px);
 }
 
+/* Dark mode — vẫn giữ đúng "chất" hồng, chỉ tối nền/sáng chữ để dịu mắt ban đêm */
+html.dark-mode{
+  --bg:#241922;
+  --bg-2:#33212E;
+  --surface:#2E1F2A;
+  --surface-2:#3A2635;
+  --accent:#E68FB2;
+  --accent-dark:#E27CA3;
+  --accent-soft:rgba(226,124,163,0.22);
+  --gold:#DCA8C0;
+  --jade:#7FC79C;
+  --jade-dark:#6BBF8D;
+  --jade-soft:rgba(107,191,141,0.18);
+  --ink:#F5E6EE;
+  --text:#F5E6EE;
+  --text-muted:#C79BB2;
+  --line:rgba(245,230,238,0.14);
+  --shadow:0 10px 26px rgba(0,0,0,0.4);
+}
+html.dark-mode body{
+  background:
+    radial-gradient(1100px 700px at 15% -10%, var(--bg-2) 0%, transparent 60%),
+    radial-gradient(900px 650px at 100% 0%, #3A2230 0%, transparent 55%),
+    var(--bg);
+}
+
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
 body{
@@ -532,6 +558,26 @@ main{ flex:1; padding:4px 18px 24px; }
 .playlist-btn .pb-txt{ flex:1; }
 .playlist-btn .pb-sub{ display:block; font-size:11px; color:var(--text-muted); font-weight:400; margin-top:1px; }
 
+.resume-cta{
+  display:flex; align-items:center; gap:12px; width:100%;
+  margin:14px 0 0;
+  padding:14px 16px;
+  border-radius:16px;
+  background:linear-gradient(135deg, var(--accent-dark), var(--accent));
+  border:none; cursor:pointer;
+  box-shadow:0 6px 18px rgba(217,118,157,0.28);
+}
+.resume-cta:active{ transform:scale(.98); }
+.resume-cta-icon{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  background:rgba(255,255,255,0.28); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:13px;
+}
+.resume-cta-txt{ flex:1; text-align:left; display:flex; flex-direction:column; }
+.resume-cta-txt b{ color:#fff; font-size:14.5px; font-family:'Noto Serif',serif; }
+.resume-cta-txt span{ color:rgba(255,255,255,0.85); font-size:12px; margin-top:1px; }
+.resume-cta-arrow{ color:#fff; font-size:18px; }
+
 </style>
 </head>
 <body>
@@ -627,13 +673,45 @@ const NAME_KEY = 'hsk_name_v1';
 const GOAL_KEY = 'hsk_goal_v1';
 const DAILY_KEY = 'hsk_daily_v1';
 const STREAK_KEY = 'hsk_streak_v1';
+const DARK_MODE_KEY = 'hsk_dark_mode_v1';
+
+function isDarkMode() { return Store.get(DARK_MODE_KEY, false) === true; }
+function applyDarkMode() {
+  document.documentElement.classList.toggle('dark-mode', isDarkMode());
+}
+function toggleDarkMode() {
+  Store.set(DARK_MODE_KEY, !isDarkMode());
+  applyDarkMode();
+  render();
+}
+
+/* Chống gian lận streak kiểu đơn giản (tự chỉnh ngày giờ điện thoại): lấy giờ
+   thật từ header phản hồi của server (không thể chỉnh tay được) rồi tính độ
+   lệch so với đồng hồ máy, dùng độ lệch đó khi tính "hôm nay". Nếu không có
+   mạng thì tự động lùi về dùng giờ máy như bình thường — không mất offline. */
+let serverTimeOffsetMs = 0;
+async function syncServerTime() {
+  try {
+    const res = await fetch(location.href, { method: 'HEAD', cache: 'no-store' });
+    const dateHeader = res.headers.get('date');
+    if (dateHeader) {
+      const serverTime = new Date(dateHeader).getTime();
+      if (!isNaN(serverTime)) serverTimeOffsetMs = serverTime - Date.now();
+    }
+  } catch (e) {
+    // offline, hoặc mở bằng file:// không có header ngày — cứ dùng giờ máy
+  }
+}
+function nowAdjusted() {
+  return new Date(Date.now() + serverTimeOffsetMs);
+}
 
 function todayStr() {
-  const d = new Date();
+  const d = nowAdjusted();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function yesterdayStr() {
-  const d = new Date();
+  const d = nowAdjusted();
   d.setDate(d.getDate() - 1);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
@@ -1094,6 +1172,7 @@ function renderTopbar() {
     </div>
     <div class="spacer"></div>
     ${state.screen === 'home' ? `
+      <button class="icon-btn" id="btn-dark" title="Chế độ tối">${isDarkMode() ? '☀️' : '🌙'}</button>
       <button class="icon-btn" id="btn-settings" title="Đổi tên / mục tiêu mỗi ngày">⚙️</button>
       <button class="icon-btn" id="btn-star" title="Sổ từ khó">★</button>
     ` : ''}
@@ -1102,6 +1181,8 @@ function renderTopbar() {
   if (back) back.onclick = onBack;
   const home = document.getElementById('btn-home');
   if (home) home.onclick = () => go('home');
+  const darkBtn = document.getElementById('btn-dark');
+  if (darkBtn) darkBtn.onclick = toggleDarkMode;
   const settingsBtn = document.getElementById('btn-settings');
   if (settingsBtn) settingsBtn.onclick = () => showGoalNameSheet(false);
   const star = document.getElementById('btn-star');
@@ -1146,6 +1227,8 @@ function renderHome() {
   const goalMetToday = goal > 0 && todayCount >= goal;
   const remaining = goal > 0 ? Math.max(0, goal - todayCount) : 0;
   const pct = goal > 0 ? Math.min(100, Math.round((todayCount / goal) * 100)) : 0;
+  const resumeInfo = getMostRecentProgress();
+  const RESUME_MODE_LABEL = { study: 'Học từ vựng', mcq: 'Trắc nghiệm', type: 'Gõ chữ' };
 
   let html = `
     <div class="hero" id="hero-box">
@@ -1167,6 +1250,15 @@ function renderHome() {
         <p>Học từ vựng theo bài, nghe phát âm, và tự kiểm tra bằng trắc nghiệm hoặc gõ chữ Hán — ngay trên điện thoại.</p>
       `}
     </div>
+    ${resumeInfo ? `
+    <button class="resume-cta" id="resume-cta">
+      <span class="resume-cta-icon">▶</span>
+      <span class="resume-cta-txt">
+        <b>Học tiếp</b>
+        <span>HSK${resumeInfo.level} · ${resumeInfo.bai === 'all' ? 'Tất cả' : 'Bài ' + resumeInfo.bai} · ${RESUME_MODE_LABEL[resumeInfo.mode] || ''}</span>
+      </span>
+      <span class="resume-cta-arrow">›</span>
+    </button>` : ''}
     <div class="section-label">Chọn cấp độ</div>
     <div class="level-grid">
   `;
@@ -1199,6 +1291,8 @@ function renderHome() {
   mainEl.querySelectorAll('.level-card').forEach(card => {
     card.onclick = () => go('level', { level: Number(card.dataset.lv), bai: 'all' });
   });
+  const resumeCta = document.getElementById('resume-cta');
+  if (resumeCta) resumeCta.onclick = resumeMostRecent;
 }
 
 /* ===================== LEVEL DETAIL ===================== */
@@ -1265,6 +1359,43 @@ function renderLevel() {
   mainEl.querySelectorAll('.mode-card').forEach(card => {
     card.onclick = () => startMode(card.dataset.mode);
   });
+}
+
+/* Tìm phiên học/ôn đang dang dở gần nhất (theo thời điểm cập nhật), dùng cho
+   nút "Học tiếp" ở trang chủ — để không phải tự chọn lại cấp/bài/chế độ. */
+function getMostRecentProgress() {
+  const all = getAllProgress();
+  let bestKey = null, best = null;
+  for (const key in all) {
+    const p = all[key];
+    if (!p || typeof p !== 'object' || typeof p.idx !== 'number') continue;
+    if (!best || (p.updatedAt || 0) > (best.updatedAt || 0)) { best = p; bestKey = key; }
+  }
+  if (!bestKey) return null;
+  const parts = bestKey.split('-');
+  if (parts.length !== 3) return null;
+  const [levelStr, baiStr, mode] = parts;
+  const level = Number(levelStr);
+  const bai = baiStr === 'all' ? 'all' : Number(baiStr);
+  if (!level || !mode) return null;
+  return { level, bai, mode, progress: best };
+}
+
+function resumeMostRecent() {
+  const r = getMostRecentProgress();
+  if (!r) return;
+  const words = wordsFor(r.level, r.bai);
+  if (words.length === 0) { toast('Không tìm thấy đúng bài để tiếp tục'); return; }
+  if (r.mode === 'study') {
+    flipped = false;
+    go('study', { mode: 'study', level: r.level, bai: r.bai, cardIdx: r.progress.idx });
+  } else {
+    const wrongWords = (r.progress.wrongIds || []).map(findWordById).filter(Boolean);
+    go(r.mode, {
+      mode: r.mode, level: r.level, bai: r.bai,
+      quiz: { words, idx: r.progress.idx, correct: r.progress.correct || 0, wrong: wrongWords, answered: false }
+    });
+  }
 }
 
 function startMode(mode) {
@@ -1777,10 +1908,14 @@ function renderStarred() {
 }
 
 /* ===================== init ===================== */
+applyDarkMode();
 render();
 if (!getName() || !getGoal()) {
   showGoalNameSheet(true);
 }
+syncServerTime().then(() => {
+  if (state.screen === 'home') render();
+});
 
 </script>
 </body>
