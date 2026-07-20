@@ -64,6 +64,23 @@ html.dark-mode body{
     radial-gradient(900px 650px at 100% 0%, #3A2230 0%, transparent 55%),
     var(--bg);
 }
+/* Các khối "kính mờ trắng" (chip, thẻ chế độ, nút, ô nhập...) được tính riêng
+   cho nền sáng — độ mờ đó khi để trên nền tối lại làm khung sáng gần bằng màu
+   chữ, mất tương phản. Hạ hẳn độ mờ xuống để khung chỉ sáng hơn nền 1 chút. */
+html.dark-mode .icon-btn{ background:rgba(255,255,255,0.08); }
+html.dark-mode .icon-btn:active{ background:rgba(255,255,255,0.16); }
+html.dark-mode .chip{ background:rgba(255,255,255,0.07); color:var(--text); }
+html.dark-mode .mode-card{ background:rgba(255,255,255,0.055); }
+html.dark-mode .mode-card:active{ background:rgba(255,255,255,0.11); }
+html.dark-mode .nav-btn{ background:rgba(255,255,255,0.07); }
+html.dark-mode .nav-btn:active{ background:rgba(255,255,255,0.14); }
+html.dark-mode .mcq-opt{ background:rgba(255,255,255,0.07); }
+html.dark-mode .mcq-opt:active{ background:rgba(255,255,255,0.14); }
+html.dark-mode .type-input{ background:rgba(255,255,255,0.08); }
+html.dark-mode .wrong-item{ background:rgba(255,255,255,0.05); }
+html.dark-mode .contact-link{ background:rgba(255,255,255,0.06); color:var(--accent); }
+html.dark-mode .contact-link:active{ background:rgba(255,255,255,0.12); }
+html.dark-mode .jump-row:active{ background:rgba(255,255,255,0.07); }
 
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
