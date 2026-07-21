@@ -363,9 +363,17 @@ main{ flex:1; padding:4px 18px 24px; }
 .q-card .q-meaning{ font-size:20px; font-weight:700; font-family:'Noto Serif',serif; color:var(--text);}
 .q-card .q-pos{ font-size:12px; color:var(--text-muted); margin-top:6px;}
 .q-card .q-hint{ font-size:13px; color:var(--gold); margin-top:10px; font-style:italic;}
+.q-feedback{
+  font-size:14px; font-weight:700; min-height:0; margin-top:0;
+  max-height:0; opacity:0; overflow:hidden;
+  transition:max-height .25s ease, opacity .2s ease, margin-top .25s ease;
+}
+.q-feedback.show{ max-height:40px; opacity:1; margin-top:12px; }
+.q-feedback.ok{ color:var(--jade-dark); }
+.q-feedback.bad{ color:var(--accent-dark); }
 
 .stamp-overlay{
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  position:absolute; top:10px; right:10px; width:auto; height:auto;
   pointer-events:none; opacity:0; transform:scale(1.4) rotate(-14deg);
 }
 .stamp-overlay.show{
@@ -377,11 +385,12 @@ main{ flex:1; padding:4px 18px 24px; }
   100%{opacity:1; transform:scale(1) rotate(-14deg);}
 }
 .stamp-overlay .stamp-ring{
-  width:120px; height:120px; border-radius:50%;
-  border:4px solid var(--jade-dark); color:var(--jade-dark);
-  background:rgba(255,255,255,0.55);
+  width:52px; height:52px; border-radius:50%;
+  border:3px solid var(--jade-dark); color:var(--jade-dark);
+  background:var(--surface);
   display:flex; align-items:center; justify-content:center;
-  font-family:'Noto Serif SC',serif; font-size:44px; font-weight:700;
+  font-family:'Noto Serif SC',serif; font-size:20px; font-weight:700;
+  box-shadow:var(--shadow);
 }
 .stamp-overlay.wrong .stamp-ring{ border-color:var(--accent-dark); color:var(--accent-dark); }
 
@@ -449,9 +458,10 @@ main{ flex:1; padding:4px 18px 24px; }
 
 .toast{
   position:fixed; left:50%; bottom:calc(24px + var(--safe-b)); transform:translateX(-50%);
-  background:var(--ink); color:#fff; border:1px solid rgba(255,255,255,0.15);
+  background:var(--accent-dark); color:#fff; border:1px solid rgba(255,255,255,0.25);
   padding:10px 18px; border-radius:999px; font-size:13px; z-index:50;
   opacity:0; transition:opacity .25s ease; pointer-events:none;
+  max-width:88vw; text-align:center;
 }
 .toast.show{ opacity:1; }
 
@@ -512,7 +522,7 @@ main{ flex:1; padding:4px 18px 24px; }
   margin-bottom:8px;
 }
 
-.streak-msg{ margin:0 0 8px; font-size:13.5px; line-height:1.5; color:var(--text-muted); max-width:92%; }
+.streak-msg{ margin:0 0 8px; font-size:13px; line-height:1.4; color:var(--text-muted); max-width:96%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .streak-msg b{ color:var(--accent-dark); }
 .streak-msg.success{ color:var(--jade-dark); }
 .streak-msg.success b{ color:var(--jade-dark); }
@@ -1254,8 +1264,8 @@ function renderHome() {
         <h1>Chào ${escapeHtml(name)} 👋</h1>
         <p class="streak-msg ${goalMetToday ? 'success' : ''}">
           ${goalMetToday
-            ? `🎉 Đạt streak <b>${streak} ngày</b> liên tiếp rồi, giỏi quá!`
-            : `Còn <b>${remaining} từ</b> nữa để hoàn thành mục tiêu hôm nay 💪`}
+            ? `🎉 Streak <b>${streak} ngày</b>, giỏi quá!`
+            : `Cần thêm <b>${remaining} từ</b> nữa hôm nay 💪`}
         </p>
         <div class="streak-bar"><i style="width:${pct}%"></i></div>
         <div class="streak-meta">
@@ -1578,6 +1588,7 @@ function renderMCQ() {
       <div class="q-meaning">${w.meaning}</div>
       <div class="q-pos">${w.pos || ''} ${w.bai ? '· HSK ' + w.level + ' · Bài ' + w.bai : ''}</div>
       <div class="q-hint">Âm Hán Việt: ${w.am_han_viet || '—'}</div>
+      <div class="q-feedback" id="q-feedback"></div>
       <div class="stamp-overlay" id="stamp"><div class="stamp-ring">${q.lastCorrect ? '对' : '×'}</div></div>
     </div>
     <div class="mcq-grid" id="mcq-grid">
@@ -1623,7 +1634,11 @@ function answerMCQ(btn, w, q) {
   });
   speak(w.word, audioPathFor(w, false));
   markDailyTouch(w.id);
-  toast(isCorrect ? praiseMsg() : encourageMsg());
+  const feedbackEl = document.getElementById('q-feedback');
+  if (feedbackEl) {
+    feedbackEl.textContent = isCorrect ? praiseMsg() : encourageMsg();
+    feedbackEl.className = 'q-feedback show ' + (isCorrect ? 'ok' : 'bad');
+  }
   const stampEl = document.getElementById('stamp');
   stampEl.innerHTML = `<div class="stamp-ring">${isCorrect ? '对' : '×'}</div>`;
   stampEl.classList.add('show');
