@@ -70,6 +70,7 @@ html.dark-mode body{
 html.dark-mode .icon-btn{ background:rgba(255,255,255,0.08); }
 html.dark-mode .icon-btn:active{ background:rgba(255,255,255,0.16); }
 html.dark-mode .chip{ background:rgba(255,255,255,0.07); color:var(--text); }
+html.dark-mode .chip.done{ background:var(--jade-soft); color:var(--jade); }
 html.dark-mode .mode-card{ background:rgba(255,255,255,0.055); }
 html.dark-mode .mode-card:active{ background:rgba(255,255,255,0.11); }
 html.dark-mode .nav-btn{ background:rgba(255,255,255,0.07); }
@@ -245,6 +246,9 @@ main{ flex:1; padding:2px 18px 12px; }
   font-size:13px; color:var(--text); cursor:pointer; white-space:nowrap;
 }
 .chip.active{ background:var(--accent-dark); border-color:var(--accent-dark); color:#fff; font-weight:600;}
+.chip.done{ background:var(--jade-soft); border-color:var(--jade); color:var(--jade-dark); font-weight:600; }
+.chip.done.active{ background:var(--jade-dark); border-color:var(--jade-dark); color:#fff; }
+.chip-check{ font-weight:700; }
 
 .mode-list{ display:flex; flex-direction:column; gap:10px; margin-top:16px;}
 .mode-card{
@@ -1386,7 +1390,11 @@ function renderHome() {
   `;
   mainEl.innerHTML = html;
   mainEl.querySelectorAll('.level-card').forEach(card => {
-    card.onclick = () => go('level', { level: Number(card.dataset.lv), bai: 'all' });
+    card.onclick = () => {
+      const lv = Number(card.dataset.lv);
+      const firstBai = lessonsInLevel(lv)[0] || 1;
+      go('level', { level: lv, bai: firstBai });
+    };
   });
   const resumeCta = document.getElementById('resume-cta');
   if (resumeCta) resumeCta.onclick = resumeMostRecent;
@@ -1397,9 +1405,12 @@ function renderLevel() {
   const lv = state.level;
   const lessons = lessonsInLevel(lv);
   const words = wordsFor(lv, state.bai);
-  let chips = `<div class="chip ${state.bai === 'all' ? 'active' : ''}" data-bai="all">Tất cả</div>`;
+  const seenSetForChips = getSeenSet();
+  let chips = '';
   lessons.forEach(b => {
-    chips += `<div class="chip ${state.bai === b ? 'active' : ''}" data-bai="${b}">Bài ${b}</div>`;
+    const bWords = wordsFor(lv, b);
+    const isDone = bWords.length > 0 && bWords.every(w => seenSetForChips.has(w.id));
+    chips += `<div class="chip ${state.bai === b ? 'active' : ''} ${isDone ? 'done' : ''}" data-bai="${b}">Bài ${b}${isDone ? ' <span class="chip-check">✓</span>' : ''}</div>`;
   });
 
   const studyProg = getProgress(progressKey(lv, state.bai, 'study'));
@@ -1447,8 +1458,7 @@ function renderLevel() {
 
   document.getElementById('chip-row').querySelectorAll('.chip').forEach(chip => {
     chip.onclick = () => {
-      const b = chip.dataset.bai === 'all' ? 'all' : Number(chip.dataset.bai);
-      go('level', { level: lv, bai: b });
+      go('level', { level: lv, bai: Number(chip.dataset.bai) });
     };
   });
   const activeChip = document.querySelector('#chip-row .chip.active');
