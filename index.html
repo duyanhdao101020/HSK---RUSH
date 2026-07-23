@@ -18,23 +18,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Noto+Serif:ital,wght@0,500;0,600;1,500&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FDF1F6;
-  --bg-2:#F8E3EC;
-  --surface:#FFFAFC;
-  --surface-2:#FDEAF1;
-  --accent:#EFC3D5;
-  --accent-dark:#CB8DA8;
-  --accent-soft:rgba(203,141,168,0.14);
-  --gold:#C39CB0;
+  --bg:#F5E8EE;
+  --bg-2:#EDDCE4;
+  --surface:#FBF4F7;
+  --surface-2:#F3E0E8;
+  --accent:#E2B8CA;
+  --accent-dark:#B67D96;
+  --accent-soft:rgba(182,125,150,0.14);
+  --gold:#AD8497;
   --jade:#8FB99D;
   --jade-dark:#5C8E72;
   --jade-soft:rgba(92,142,114,0.16);
   --ink:#4A3548;
   --text:#4A3548;
-  --text-muted:#B48CA0;
+  --text-muted:#A9829A;
   --line:rgba(74,53,72,0.12);
   --radius:14px;
-  --shadow:0 10px 26px rgba(217,118,157,0.22);
+  --shadow:0 10px 24px rgba(182,125,150,0.20);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 }
@@ -45,23 +45,23 @@ html.dark-mode{
   --bg-2:#33212E;
   --surface:#2E1F2A;
   --surface-2:#3A2635;
-  --accent:#E68FB2;
-  --accent-dark:#E27CA3;
-  --accent-soft:rgba(226,124,163,0.22);
-  --gold:#DCA8C0;
+  --accent:#CC7C9B;
+  --accent-dark:#C26D90;
+  --accent-soft:rgba(194,109,144,0.20);
+  --gold:#C298AB;
   --jade:#7FC79C;
   --jade-dark:#6BBF8D;
   --jade-soft:rgba(107,191,141,0.18);
   --ink:#F5E6EE;
   --text:#F5E6EE;
-  --text-muted:#C79BB2;
+  --text-muted:#B98CA0;
   --line:rgba(245,230,238,0.14);
   --shadow:0 10px 26px rgba(0,0,0,0.4);
 }
 html.dark-mode body{
   background:
     radial-gradient(1100px 700px at 15% -10%, var(--bg-2) 0%, transparent 60%),
-    radial-gradient(900px 650px at 100% 0%, #3A2230 0%, transparent 55%),
+    radial-gradient(900px 650px at 100% 0%, #322030 0%, transparent 55%),
     var(--bg);
 }
 /* Các khối "kính mờ trắng" (chip, thẻ chế độ, nút, ô nhập...) được tính riêng
@@ -79,6 +79,9 @@ html.dark-mode .mcq-opt{ background:rgba(255,255,255,0.07); }
 html.dark-mode .mcq-opt:active{ background:rgba(255,255,255,0.14); }
 html.dark-mode .type-input{ background:rgba(255,255,255,0.08); }
 html.dark-mode .wrong-item{ background:rgba(255,255,255,0.05); }
+html.dark-mode .speed-card{ background:rgba(255,255,255,0.055); }
+html.dark-mode .history-item{ background:rgba(255,255,255,0.055); }
+html.dark-mode .history-item:active{ background:rgba(255,255,255,0.11); }
 html.dark-mode .contact-link{ background:rgba(255,255,255,0.06); color:var(--accent); }
 html.dark-mode .contact-link:active{ background:rgba(255,255,255,0.12); }
 html.dark-mode .jump-row:active{ background:rgba(255,255,255,0.07); }
@@ -89,7 +92,7 @@ body{
   margin:0;
   background:
     radial-gradient(1100px 700px at 15% -10%, var(--bg-2) 0%, transparent 60%),
-    radial-gradient(900px 650px at 100% 0%, #FAE7F0 0%, transparent 55%),
+    radial-gradient(900px 650px at 100% 0%, #F0D9E1 0%, transparent 55%),
     var(--bg);
   color:var(--text);
   font-family:'Be Vietnam Pro', -apple-system, system-ui, sans-serif;
@@ -320,9 +323,9 @@ main{ flex:1; padding:2px 18px 12px; }
   text-align:left;
 }
 .card .example-hz{ font-family:'Noto Serif SC',serif; font-size:19px; margin-bottom:4px; color:var(--text);}
-.card .example-py{ font-size:13px; font-style:italic; color:var(--accent-dark); margin-bottom:4px;}
+.card .example-py{ font-size:13px; font-style:italic; color:var(--text); margin-bottom:4px;}
 .card .example-hz .hl-word{ color:var(--accent-dark); font-weight:700; }
-.card .example-py .hl-word{ color:var(--jade-dark); font-weight:700; font-style:normal; }
+.card .example-py .hl-word{ color:var(--accent-dark); font-weight:700; font-style:normal; }
 .card .example-vi{ font-size:13.5px; color:#6E5568;}
 
 .tts-btn{
@@ -458,6 +461,37 @@ main{ flex:1; padding:2px 18px 12px; }
   font-size:18px; color:var(--accent-dark); padding:4px 2px 4px 8px;
 }
 .wi-unstar:active{ transform:scale(.9); }
+
+.speed-card{
+  background:rgba(255,255,255,0.5); border:1px solid var(--line);
+  border-radius:14px; padding:14px 16px; box-shadow:var(--shadow);
+}
+.speed-avg{ font-size:12.5px; color:var(--text-muted); margin-bottom:10px; }
+.speed-avg b{ color:var(--text); }
+.speed-bars{
+  display:flex; align-items:flex-end; gap:4px; height:60px;
+  border-bottom:1px solid var(--line); padding-bottom:2px; margin-bottom:4px;
+}
+.speed-bar{
+  flex:1 1 0; min-width:3px; max-width:16px; border-radius:3px 3px 0 0;
+  background:var(--accent-dark);
+}
+
+.history-list{ display:flex; flex-direction:column; gap:8px; }
+.history-item{
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,0.5); border:1px solid var(--line);
+  border-radius:12px; padding:12px 14px; cursor:pointer;
+}
+.history-item:active{ background:rgba(255,255,255,0.85); }
+.history-item .hi-pct{
+  font-family:'Noto Serif SC',serif; font-size:20px; font-weight:700;
+  color:var(--jade-dark); flex-shrink:0; width:50px; text-align:center;
+}
+.history-item .hi-info{ min-width:0; flex:1; }
+.history-item .hi-top{ font-size:13px; color:var(--text); font-weight:600; }
+.history-item .hi-sub{ font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+.history-item .hi-date{ font-size:10.5px; color:var(--gold); margin-top:2px; }
 
 .empty-state{ text-align:center; padding:60px 20px; color:var(--text-muted); }
 .empty-state .em-hz{ font-family:'Noto Serif SC',serif; font-size:44px; color:var(--gold); margin-bottom:10px;}
@@ -625,6 +659,7 @@ html.dark-mode .brand-footer:active{ background:rgba(255,255,255,0.06); }
   box-shadow:0 6px 18px rgba(217,118,157,0.28);
 }
 .resume-cta:active{ transform:scale(.98); }
+.resume-cta.disabled{ opacity:0.6; }
 .resume-cta-icon{
   width:34px; height:34px; border-radius:50%; flex-shrink:0;
   background:rgba(255,255,255,0.28); color:#fff;
@@ -731,6 +766,7 @@ const GOAL_KEY = 'hsk_goal_v1';
 const DAILY_KEY = 'hsk_daily_v1';
 const STREAK_KEY = 'hsk_streak_v1';
 const DARK_MODE_KEY = 'hsk_dark_mode_v1';
+const HISTORY_KEY = 'hsk_quiz_history_v1';
 
 function isDarkMode() { return Store.get(DARK_MODE_KEY, false) === true; }
 function applyDarkMode() {
@@ -928,6 +964,29 @@ function markSeen(id) {
   if (s.has(id)) return;
   s.add(id);
   Store.set(SEEN_KEY, Array.from(s));
+}
+
+/* ===================== quiz timing / history ===================== */
+function getHistory() {
+  const raw = Store.get(HISTORY_KEY, []);
+  return Array.isArray(raw) ? raw : [];
+}
+function saveHistoryEntry(entry) {
+  const list = getHistory();
+  list.unshift(entry);
+  if (list.length > 100) list.length = 100;
+  Store.set(HISTORY_KEY, list);
+}
+function clearHistory() { Store.set(HISTORY_KEY, []); }
+function fmtMs(ms) {
+  const s = ms / 1000;
+  return s >= 10 ? `${s.toFixed(1)}s` : `${s.toFixed(1)}s`;
+}
+function fmtDuration(ms) {
+  const totalSec = Math.round(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return m > 0 ? `${m} phút ${s} giây` : `${s} giây`;
 }
 
 /* ===================== data helpers ===================== */
@@ -1214,6 +1273,82 @@ function showGoalNameSheet(forced) {
   };
 }
 
+/* ===================== random review mini-game ===================== */
+let randomReviewLevels = new Set([1, 2, 3, 4, 5, 6]);
+let randomReviewMode = 'mcq';
+
+function openRandomReviewSheet() {
+  renderRandomReviewSheet();
+}
+
+function renderRandomReviewSheet() {
+  const seen = getSeenSet();
+  const perLevel = {};
+  for (let lv = 1; lv <= 6; lv++) {
+    perLevel[lv] = levelWords(lv).filter(w => seen.has(w.id)).length;
+  }
+  let pool = [];
+  for (let lv = 1; lv <= 6; lv++) {
+    if (!randomReviewLevels.has(lv)) continue;
+    pool = pool.concat(levelWords(lv).filter(w => seen.has(w.id)));
+  }
+  const selectedCount = pool.length;
+  const sampleSize = Math.min(selectedCount, 20);
+
+  showSheet(`
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">🎲 Ôn ngẫu nhiên</div>
+    <p class="guide-intro">Ôn lại từ đã học (mặc định tất cả cấp độ) — chọn bớt cấp độ nếu muốn:</p>
+    <div class="chip-row" id="rr-level-chips" style="flex-wrap:wrap;overflow:visible;">
+      ${[1, 2, 3, 4, 5, 6].map(lv => `<div class="chip ${randomReviewLevels.has(lv) ? 'active' : ''}" data-lv="${lv}">HSK${lv} (${perLevel[lv]})</div>`).join('')}
+    </div>
+    <label class="onboard-label" style="display:block;margin-top:14px;">Hình thức ôn tập</label>
+    <div class="chip-row" id="rr-mode-chips">
+      <div class="chip ${randomReviewMode === 'mcq' ? 'active' : ''}" data-mode="mcq">Trắc nghiệm</div>
+      <div class="chip ${randomReviewMode === 'type' ? 'active' : ''}" data-mode="type">Gõ chữ Hán</div>
+    </div>
+    <button class="nav-btn primary" id="rr-start-btn" style="width:100%;margin-top:16px;" ${selectedCount === 0 ? 'disabled' : ''}>
+      ${selectedCount > 0 ? `Bắt đầu ôn (${sampleSize} từ)` : 'Chưa có từ nào đã học ở các cấp đã chọn'}
+    </button>
+  `);
+
+  document.querySelectorAll('#rr-level-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      const lv = Number(chip.dataset.lv);
+      if (randomReviewLevels.has(lv)) {
+        if (randomReviewLevels.size > 1) randomReviewLevels.delete(lv);
+      } else {
+        randomReviewLevels.add(lv);
+      }
+      renderRandomReviewSheet();
+    };
+  });
+  document.querySelectorAll('#rr-mode-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      randomReviewMode = chip.dataset.mode;
+      renderRandomReviewSheet();
+    };
+  });
+  const startBtn = document.getElementById('rr-start-btn');
+  if (startBtn && selectedCount > 0) {
+    startBtn.onclick = () => {
+      const sample = shuffle(pool).slice(0, sampleSize);
+      closeSheet();
+      startRandomReview(sample, randomReviewMode);
+    };
+  }
+}
+
+function startRandomReview(words, mode) {
+  go(mode, {
+    mode,
+    level: null,
+    bai: 'all',
+    quizOrigin: 'random',
+    quiz: { words, idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now() }
+  });
+}
+
 /* ===================== router / state ===================== */
 const app = document.getElementById('app');
 const mainEl = document.getElementById('main');
@@ -1225,7 +1360,8 @@ let state = {
   bai: 'all',
   mode: null, // 'study' | 'mcq' | 'type'
   cardIdx: 0,
-  quiz: null
+  quiz: null,
+  quizOrigin: null // 'level' | 'starred' | 'random'
 };
 
 function go(screen, patch = {}) {
@@ -1245,6 +1381,7 @@ function render() {
     if (state.screen === 'type') return renderType();
     if (state.screen === 'result') return renderResult();
     if (state.screen === 'starred') return renderStarred();
+    if (state.screen === 'history') return renderHistory();
   } catch (err) {
     console.error('HSK Rush render error:', err);
     renderFatalError();
@@ -1279,6 +1416,7 @@ function renderTopbar() {
       <button class="icon-btn" id="btn-dark" title="Chế độ tối">${isDarkMode() ? '☀️' : '🌙'}</button>
       <button class="icon-btn" id="btn-settings" title="Đổi tên / mục tiêu mỗi ngày">⚙️</button>
       <button class="icon-btn" id="btn-star" title="Sổ từ khó">★</button>
+      <button class="icon-btn" id="btn-history" title="Lịch sử ôn tập">⏱</button>
     ` : ''}
   `;
   const back = document.getElementById('btn-back');
@@ -1291,14 +1429,19 @@ function renderTopbar() {
   if (settingsBtn) settingsBtn.onclick = () => showGoalNameSheet(false);
   const star = document.getElementById('btn-star');
   if (star) star.onclick = () => go('starred');
+  const historyBtn = document.getElementById('btn-history');
+  if (historyBtn) historyBtn.onclick = () => go('history');
 }
 
 function titleFor() {
   if (state.screen === 'home') return 'HSK Rush';
   if (state.screen === 'level') return `HSK ${state.level}`;
   if (state.screen === 'starred') return 'Sổ từ khó';
+  if (state.screen === 'history') return 'Lịch sử ôn tập';
   if (state.level) return `HSK ${state.level}`;
-  if (['study', 'mcq', 'type', 'result'].includes(state.screen)) return 'Sổ từ khó';
+  if (['study', 'mcq', 'type', 'result'].includes(state.screen)) {
+    return state.quizOrigin === 'random' ? '🎲 Ôn ngẫu nhiên' : 'Sổ từ khó';
+  }
   return 'HSK Rush';
 }
 function subtitleFor() {
@@ -1308,15 +1451,25 @@ function subtitleFor() {
   if (state.screen === 'type') return 'Gõ chữ Hán';
   if (state.screen === 'result') return 'Kết quả';
   if (state.screen === 'starred') return 'Ôn lại từ khó';
+  if (state.screen === 'history') return 'So sánh tốc độ làm bài';
   return 'Chọn bài';
+}
+
+function backTargetScreen() {
+  if (state.level) return 'level';
+  if (state.quizOrigin === 'random') return 'home';
+  return 'starred';
 }
 
 function onBack() {
   if (state.screen === 'level') return go('home');
   if (['study', 'mcq', 'type', 'result'].includes(state.screen)) {
-    return state.level ? go('level', { level: state.level }) : go('starred');
+    if (state.level) return go('level', { level: state.level });
+    if (state.quizOrigin === 'random') return go('home');
+    return go('starred');
   }
   if (state.screen === 'starred') return go('home');
+  if (state.screen === 'history') return go('home');
   go('home');
 }
 
@@ -1331,8 +1484,7 @@ function renderHome() {
   const goalMetToday = goal > 0 && todayCount >= goal;
   const remaining = goal > 0 ? Math.max(0, goal - todayCount) : 0;
   const pct = goal > 0 ? Math.min(100, Math.round((todayCount / goal) * 100)) : 0;
-  const resumeInfo = getMostRecentProgress();
-  const RESUME_MODE_LABEL = { study: 'Học từ vựng', mcq: 'Trắc nghiệm', type: 'Gõ chữ' };
+  const seenCountTotal = seen.size;
 
   let html = `
     <div class="hero" id="hero-box">
@@ -1354,15 +1506,14 @@ function renderHome() {
         <p>Học từ vựng theo bài, nghe phát âm, và tự kiểm tra bằng trắc nghiệm hoặc gõ chữ Hán — ngay trên điện thoại.</p>
       `}
     </div>
-    ${resumeInfo ? `
-    <button class="resume-cta" id="resume-cta">
-      <span class="resume-cta-icon">▶</span>
+    <button class="resume-cta" id="random-review-cta">
+      <span class="resume-cta-icon">🎲</span>
       <span class="resume-cta-txt">
-        <b>Học tiếp</b>
-        <span>HSK${resumeInfo.level} · ${resumeInfo.bai === 'all' ? 'Tất cả' : 'Bài ' + resumeInfo.bai} · ${RESUME_MODE_LABEL[resumeInfo.mode] || ''}</span>
+        <b>Ôn ngẫu nhiên</b>
+        <span>${seenCountTotal > 0 ? `${seenCountTotal} từ đã học · chọn cấp độ để ôn` : 'Học vài từ trước rồi quay lại ôn nhé'}</span>
       </span>
       <span class="resume-cta-arrow">›</span>
-    </button>` : ''}
+    </button>
     <div class="section-label">Chọn cấp độ</div>
     <div class="level-grid">
   `;
@@ -1396,8 +1547,14 @@ function renderHome() {
       go('level', { level: lv, bai: firstBai });
     };
   });
-  const resumeCta = document.getElementById('resume-cta');
-  if (resumeCta) resumeCta.onclick = resumeMostRecent;
+  const randomCta = document.getElementById('random-review-cta');
+  if (randomCta) {
+    if (seenCountTotal === 0) randomCta.classList.add('disabled');
+    randomCta.onclick = () => {
+      if (seenCountTotal === 0) { toast('Học vài từ trước rồi quay lại ôn nhé'); return; }
+      openRandomReviewSheet();
+    };
+  }
 }
 
 /* ===================== LEVEL DETAIL ===================== */
@@ -1516,22 +1673,22 @@ function startMode(mode) {
     if (hasResumable) {
       openResumeSheet(
         `Bạn đang học tới từ số <b>${prog.idx + 1}/${words.length}</b> ở đây. Tiếp tục hay học lại từ đầu?`,
-        () => { flipped = false; go('study', { mode, cardIdx: prog.idx }); },
-        () => { clearProgress(key); flipped = false; go('study', { mode, cardIdx: 0 }); }
+        () => { flipped = false; go('study', { mode, quizOrigin: 'level', cardIdx: prog.idx }); },
+        () => { clearProgress(key); flipped = false; go('study', { mode, quizOrigin: 'level', cardIdx: 0 }); }
       );
     } else {
       flipped = false;
-      go('study', { mode, cardIdx: 0 });
+      go('study', { mode, quizOrigin: 'level', cardIdx: 0 });
     }
     return;
   }
 
   function freshQuiz() {
-    go(mode, { mode, quiz: { words, idx: 0, correct: 0, wrong: [], answered: false } });
+    go(mode, { mode, quizOrigin: 'level', quiz: { words, idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now() } });
   }
   function resumedQuiz() {
     const wrongWords = (prog.wrongIds || []).map(findWordById).filter(Boolean);
-    go(mode, { mode, quiz: { words, idx: prog.idx, correct: prog.correct || 0, wrong: wrongWords, answered: false } });
+    go(mode, { mode, quizOrigin: 'level', quiz: { words, idx: prog.idx, correct: prog.correct || 0, wrong: wrongWords, answered: false, times: [], startTime: Date.now() } });
   }
   if (hasResumable) {
     openResumeSheet(
@@ -1550,7 +1707,7 @@ function renderStudy() {
   const words = state.level ? wordsFor(state.level, state.bai) : (state.studyWords || []);
   const idx = Math.max(0, Math.min(state.cardIdx, words.length - 1));
   const w = words[idx];
-  if (!w) { toast('Không có từ nào để học'); go(state.level ? 'level' : 'starred', { level: state.level }); return; }
+  if (!w) { toast('Không có từ nào để học'); go(backTargetScreen(), { level: state.level }); return; }
   const stars = getStars();
   const isStar = stars.has(w.id);
   const pct = Math.round(((idx + 1) / words.length) * 100);
@@ -1625,7 +1782,7 @@ function renderStudy() {
     if (idx === words.length - 1) {
       if (studyKey) clearProgress(studyKey);
       toast('Đã học hết! Bắt đầu lại từ đầu.');
-      go(state.level ? 'level' : 'starred', { level: state.level });
+      go(backTargetScreen(), { level: state.level });
       return;
     }
     const newIdx = idx + 1;
@@ -1657,6 +1814,7 @@ function renderMCQ() {
     q.options = shuffle([w, ...distractors]);
     q._optFor = q.idx;
     q.answered = false;
+    q._qStart = Date.now();
   }
 
   mainEl.innerHTML = `
@@ -1695,6 +1853,8 @@ function renderMCQ() {
 function answerMCQ(btn, w, q) {
   if (q.answered) return;
   q.answered = true;
+  const elapsed = Date.now() - (q._qStart || Date.now());
+  (q.times = q.times || []).push(elapsed);
   const chosenId = btn.dataset.id;
   const isCorrect = chosenId === w.id;
   q.lastCorrect = isCorrect;
@@ -1755,6 +1915,7 @@ function renderType() {
   if (q.idx >= q.words.length) return go('result');
   const w = q.words[q.idx];
   const answered = !!q.answered;
+  if (q._timerIdx !== q.idx) { q._qStart = Date.now(); q._timerIdx = q.idx; }
 
   mainEl.innerHTML = `
     <div class="quiz-top">
@@ -1809,6 +1970,8 @@ function renderType() {
       q.answered = true;
       q.lastCorrect = correct;
       q.lastInput = val;
+      const elapsed = Date.now() - (q._qStart || Date.now());
+      (q.times = q.times || []).push(elapsed);
       if (correct) { q.correct++; removeFromDifficultBook(w.id); } else { q.wrong.push(w); incrementWrong(w.id); }
       speak(w.word, audioPathFor(w, false));
       markDailyTouch(w.id);
@@ -1837,11 +2000,45 @@ function renderResult() {
   const q = state.quiz;
   const total = q.words.length;
   const pct = total ? Math.round((q.correct / total) * 100) : 0;
+  const timeArr = q.times || [];
+  const totalMs = timeArr.reduce((a, b) => a + b, 0);
+  const avgMs = timeArr.length ? totalMs / timeArr.length : 0;
+  const maxMs = timeArr.length ? Math.max(...timeArr) : 0;
+
+  if (!q._historySaved && timeArr.length > 0) {
+    q._historySaved = true;
+    saveHistoryEntry({
+      id: 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      ts: Date.now(),
+      mode: state.mode,
+      level: state.level,
+      bai: state.bai,
+      origin: state.quizOrigin || (state.level ? 'level' : 'starred'),
+      correct: q.correct,
+      total,
+      totalMs,
+      items: q.words.slice(0, timeArr.length).map((w, i) => ({ word: w.word, meaning: w.meaning, ms: timeArr[i] || 0 }))
+    });
+  }
+
   mainEl.innerHTML = `
     <div class="result-card">
       <div class="big-num">${pct}%</div>
       <p>${q.correct} / ${total} câu đúng</p>
     </div>
+    ${timeArr.length ? `
+    <div class="section-label">⏱ Tốc độ làm bài</div>
+    <div class="speed-card">
+      <div class="speed-avg">Trung bình <b>${(avgMs / 1000).toFixed(1)}s</b> / câu · Tổng <b>${fmtDuration(totalMs)}</b></div>
+      <div class="speed-bars">
+        ${timeArr.map(ms => {
+          const h = maxMs > 0 ? Math.max(6, Math.round((ms / maxMs) * 56)) : 6;
+          return `<div class="speed-bar" style="height:${h}px" title="${(ms / 1000).toFixed(1)}s"></div>`;
+        }).join('')}
+      </div>
+      <button class="sheet-link-btn" id="goto-history-btn" style="margin-top:2px;">📊 Xem lịch sử để so sánh</button>
+    </div>
+    ` : ''}
     ${q.wrong.length ? `
       <div class="section-label">Cần ôn lại (${q.wrong.length})</div>
       <div class="wrong-list">
@@ -1860,16 +2057,97 @@ function renderResult() {
       <button class="nav-btn primary" id="retry-btn">${q.wrong.length ? 'Ôn lại từ sai' : 'Làm lại'}</button>
     </div>
   `;
-  document.getElementById('back-lv').onclick = () => {
-    state.level ? go('level', { level: state.level }) : go('starred');
-  };
+  document.getElementById('back-lv').onclick = () => go(backTargetScreen(), { level: state.level });
+  const historyBtn = document.getElementById('goto-history-btn');
+  if (historyBtn) historyBtn.onclick = () => go('history');
   document.getElementById('retry-btn').onclick = () => {
     if (state.level) clearProgress(progressKey(state.level, state.bai, state.mode));
     const words = q.wrong.length ? shuffle(q.wrong) : q.words;
     go(state.mode, {
-      quiz: { words, idx: 0, correct: 0, wrong: [], answered: false }
+      quiz: { words, idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now() }
     });
   };
+}
+
+/* ===================== HISTORY ("Lịch sử ôn tập") ===================== */
+function renderHistory() {
+  const history = getHistory();
+  if (history.length === 0) {
+    mainEl.innerHTML = `
+      <div class="empty-state">
+        <div class="em-hz">空</div>
+        <div>Chưa có lượt ôn tập nào được ghi lại.<br/>Hoàn thành 1 lượt trắc nghiệm hoặc gõ chữ để xem lịch sử & tốc độ ở đây.</div>
+      </div>
+    `;
+    return;
+  }
+  const modeLabel = { mcq: 'Trắc nghiệm', type: 'Gõ chữ Hán', study: 'Học từ vựng' };
+  const originLabel = { random: '🎲 Ôn ngẫu nhiên', starred: 'Sổ từ khó' };
+
+  mainEl.innerHTML = `
+    <div class="section-label">${history.length} lượt gần đây</div>
+    <div class="history-list" id="history-list">
+      ${history.map(h => {
+        const pct = h.total ? Math.round((h.correct / h.total) * 100) : 0;
+        const avgMs = h.items && h.items.length ? h.totalMs / h.items.length : 0;
+        const date = new Date(h.ts);
+        const dateStr = date.toLocaleDateString('vi-VN') + ' · ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const tag = originLabel[h.origin] || (h.level ? `HSK${h.level}${h.bai && h.bai !== 'all' ? ' · Bài ' + h.bai : ''}` : 'Sổ từ khó');
+        return `
+        <div class="history-item" data-id="${h.id}">
+          <div class="hi-pct">${pct}%</div>
+          <div class="hi-info">
+            <div class="hi-top">${modeLabel[h.mode] || h.mode} · ${tag}</div>
+            <div class="hi-sub">${h.correct}/${h.total} đúng · ⏱ ${fmtDuration(h.totalMs)} · TB ${(avgMs / 1000).toFixed(1)}s/câu</div>
+            <div class="hi-date">${dateStr}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="nav-btn" id="clear-history-btn" style="width:100%;margin-top:14px;">Xóa lịch sử</button>
+  `;
+  document.querySelectorAll('.history-item').forEach(item => {
+    item.onclick = () => {
+      const h = history.find(x => x.id === item.dataset.id);
+      if (h) openHistoryDetailSheet(h);
+    };
+  });
+  const clearBtn = document.getElementById('clear-history-btn');
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      clearHistory();
+      renderHistory();
+      toast('Đã xóa lịch sử ôn tập');
+    };
+  }
+}
+
+function openHistoryDetailSheet(h) {
+  const items = h.items || [];
+  const maxMs = items.length ? Math.max(...items.map(i => i.ms)) : 0;
+  const avgMs = items.length ? h.totalMs / items.length : 0;
+  showSheet(`
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${h.correct}/${h.total} đúng · ⏱ ${fmtDuration(h.totalMs)}</div>
+    <div class="speed-card" style="margin-bottom:12px;">
+      <div class="speed-avg">Trung bình <b>${(avgMs / 1000).toFixed(1)}s</b> / câu</div>
+      <div class="speed-bars">
+        ${items.map(i => {
+          const hgt = maxMs > 0 ? Math.max(6, Math.round((i.ms / maxMs) * 56)) : 6;
+          return `<div class="speed-bar" style="height:${hgt}px" title="${escapeHtml(i.word)}: ${(i.ms / 1000).toFixed(1)}s"></div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="jump-list">
+      ${items.map((i, idx) => `
+        <div class="jump-row">
+          <span class="jr-num">${idx + 1}</span>
+          <span class="jr-hz hanzi">${i.word}</span>
+          <span class="jr-mn">${i.meaning || ''}</span>
+          <span class="wi-tag" style="margin-left:auto;flex-shrink:0;">${(i.ms / 1000).toFixed(1)}s</span>
+        </div>`).join('')}
+    </div>
+  `);
 }
 
 /* ===================== STARRED ("Sổ từ khó") ===================== */
@@ -1984,22 +2262,22 @@ function renderStarred() {
     const pool = starredPool(filtered);
     if (pool.length === 0) { toast('Không có từ nào để học'); return; }
     flipped = false;
-    go('study', { mode: 'study', level: null, bai: 'all', studyWords: shuffle(pool), cardIdx: 0 });
+    go('study', { mode: 'study', level: null, bai: 'all', quizOrigin: 'starred', studyWords: shuffle(pool), cardIdx: 0 });
   };
   document.getElementById('starred-mcq').onclick = () => {
     const pool = starredPool(filtered);
     if (pool.length === 0) { toast('Không có từ nào để ôn'); return; }
     go('mcq', {
-      mode: 'mcq', level: null, bai: 'all',
-      quiz: { words: shuffle(pool), idx: 0, correct: 0, wrong: [], answered: false }
+      mode: 'mcq', level: null, bai: 'all', quizOrigin: 'starred',
+      quiz: { words: shuffle(pool), idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now() }
     });
   };
   document.getElementById('starred-type').onclick = () => {
     const pool = starredPool(filtered);
     if (pool.length === 0) { toast('Không có từ nào để ôn'); return; }
     go('type', {
-      mode: 'type', level: null, bai: 'all',
-      quiz: { words: shuffle(pool), idx: 0, correct: 0, wrong: [], answered: false }
+      mode: 'type', level: null, bai: 'all', quizOrigin: 'starred',
+      quiz: { words: shuffle(pool), idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now() }
     });
   };
 
