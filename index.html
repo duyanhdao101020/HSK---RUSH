@@ -71,6 +71,8 @@ html.dark-mode .icon-btn{ background:rgba(255,255,255,0.08); }
 html.dark-mode .icon-btn:active{ background:rgba(255,255,255,0.16); }
 html.dark-mode .chip{ background:rgba(255,255,255,0.07); color:var(--text); }
 html.dark-mode .chip.done{ background:var(--jade-soft); color:var(--jade); }
+html.dark-mode .chip.active{ background:var(--accent-dark); border-color:var(--accent-dark); color:#fff; }
+html.dark-mode .chip.done.active{ background:var(--jade-dark); border-color:var(--jade-dark); color:#fff; }
 html.dark-mode .mode-card{ background:rgba(255,255,255,0.055); }
 html.dark-mode .mode-card:active{ background:rgba(255,255,255,0.11); }
 html.dark-mode .nav-btn{ background:rgba(255,255,255,0.07); }
@@ -1053,6 +1055,32 @@ function shuffle(arr) {
 }
 
 /* ===================== TTS ===================== */
+/* Some hanzi are polyphonic (多音字): the device's built-in voice often
+   defaults to the character's most common reading, which is wrong for
+   certain words here (e.g. 还 read as "hái" when this word actually means
+   "trả lại"/return and should be "huán"). For known cases we speak a short,
+   unambiguous two-character word instead of the bare character so the TTS
+   engine picks the correct reading. This only changes what gets spoken —
+   the displayed hanzi/pinyin/meaning are never touched. Extend this map if
+   other polyphonic words are reported as mispronounced. */
+const POLYPHONE_TTS_OVERRIDES = {
+  '还': { huan: '归还' } // huán "trả lại" — disambiguate away from the "hái" reading
+};
+function stripTones(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+function speechTextFor(w) {
+  if (!w) return '';
+  if (w.word && w.word.length === 1 && w.word_pinyin && POLYPHONE_TTS_OVERRIDES[w.word]) {
+    const base = stripTones(w.word_pinyin);
+    const overrides = POLYPHONE_TTS_OVERRIDES[w.word];
+    for (const key in overrides) {
+      if (base.startsWith(key)) return overrides[key];
+    }
+  }
+  return w.word;
+}
+
 let zhVoice = null;
 function pickVoice() {
   if (!('speechSynthesis' in window)) return;
@@ -1762,7 +1790,7 @@ function renderStudy() {
   };
   document.getElementById('tts-btn').onclick = (e) => {
     e.stopPropagation();
-    speak(flipped && w.example ? w.example : w.word, audioPathFor(w, flipped && !!w.example));
+    speak(flipped && w.example ? w.example : speechTextFor(w), audioPathFor(w, flipped && !!w.example));
   };
   document.getElementById('jump-trigger').onclick = () => {
     openJumpSheet(words, idx, (i) => {
@@ -1872,7 +1900,7 @@ function answerMCQ(btn, w, q) {
       }
     }
   });
-  speak(w.word, audioPathFor(w, false));
+  speak(speechTextFor(w), audioPathFor(w, false));
   markDailyTouch(w.id);
   const feedbackEl = document.getElementById('q-feedback');
   if (feedbackEl) {
@@ -1973,7 +2001,7 @@ function renderType() {
       const elapsed = Date.now() - (q._qStart || Date.now());
       (q.times = q.times || []).push(elapsed);
       if (correct) { q.correct++; removeFromDifficultBook(w.id); } else { q.wrong.push(w); incrementWrong(w.id); }
-      speak(w.word, audioPathFor(w, false));
+      speak(speechTextFor(w), audioPathFor(w, false));
       markDailyTouch(w.id);
       renderType();
     }
@@ -2285,7 +2313,7 @@ function renderStarred() {
     item.onclick = (e) => {
       if (e.target.closest('.wi-unstar')) return;
       const w = findWordById(item.dataset.id);
-      if (w) speak(w.word, audioPathFor(w, false));
+      if (w) speak(speechTextFor(w), audioPathFor(w, false));
     };
   });
   mainEl.querySelectorAll('.wi-unstar').forEach(btn => {
@@ -2298,6 +2326,17 @@ function renderStarred() {
 }
 
 /* ===================== init ===================== */
+document.addEventListener('keydown', (e) => {
+  if (state.screen !== 'type') return;
+  if (document.getElementById('sheet-backdrop')) return;
+  const q = state.quiz;
+  if (!q || !q.answered) return;
+  if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const btn = document.getElementById('next-btn');
+    if (btn) btn.click();
+  }
+});
 applyDarkMode();
 render();
 if (!getName() || !getGoal()) {
