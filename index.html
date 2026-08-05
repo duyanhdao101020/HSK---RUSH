@@ -1325,6 +1325,10 @@ function showGoalNameSheet(forced) {
 /* ===================== random review mini-game ===================== */
 let randomReviewLevels = new Set([1, 2, 3, 4, 5, 6]);
 let randomReviewMode = 'mcq';
+let randomReviewCount = 20;
+const RANDOM_REVIEW_COUNT_OPTIONS = [10, 15, 20, 30, 40, 50];
+let levelReviewCount = 'all';
+const LEVEL_REVIEW_COUNT_OPTIONS = [15, 20, 25, 30, 35, 40, 45, 50];
 
 function openRandomReviewSheet() {
   renderRandomReviewSheet();
@@ -1342,7 +1346,7 @@ function renderRandomReviewSheet() {
     pool = pool.concat(levelWords(lv).filter(w => seen.has(w.id)));
   }
   const selectedCount = pool.length;
-  const sampleSize = Math.min(selectedCount, 20);
+  const sampleSize = Math.min(selectedCount, randomReviewCount);
 
   showSheet(`
     <div class="sheet-handle"></div>
@@ -1350,6 +1354,10 @@ function renderRandomReviewSheet() {
     <p class="guide-intro">Ôn lại từ đã học (mặc định tất cả cấp độ) — chọn bớt cấp độ nếu muốn:</p>
     <div class="chip-row" id="rr-level-chips" style="flex-wrap:wrap;overflow:visible;">
       ${[1, 2, 3, 4, 5, 6].map(lv => `<div class="chip ${randomReviewLevels.has(lv) ? 'active' : ''}" data-lv="${lv}">HSK${lv} (${perLevel[lv]})</div>`).join('')}
+    </div>
+    <label class="onboard-label" style="display:block;margin-top:14px;">Số lượng từ ôn</label>
+    <div class="chip-row" id="rr-count-chips" style="flex-wrap:wrap;overflow:visible;">
+      ${RANDOM_REVIEW_COUNT_OPTIONS.map(n => `<div class="chip ${randomReviewCount === n ? 'active' : ''}" data-count="${n}">${n}</div>`).join('')}
     </div>
     <label class="onboard-label" style="display:block;margin-top:14px;">Hình thức ôn tập</label>
     <div class="chip-row" id="rr-mode-chips">
@@ -1369,6 +1377,12 @@ function renderRandomReviewSheet() {
       } else {
         randomReviewLevels.add(lv);
       }
+      renderRandomReviewSheet();
+    };
+  });
+  document.querySelectorAll('#rr-count-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      randomReviewCount = Number(chip.dataset.count);
       renderRandomReviewSheet();
     };
   });
@@ -1402,20 +1416,33 @@ function startRandomReview(words, mode) {
    Mỗi lần vào sẽ xáo lại thứ tự khác nhau. Người dùng chọn trắc nghiệm hay gõ chữ. */
 function renderLevelReviewSheet(lv) {
   const all = levelWords(lv);
+  const sampleSize = levelReviewCount === 'all' ? all.length : Math.min(all.length, levelReviewCount);
   showSheet(`
     <div class="sheet-handle"></div>
     <div class="sheet-title">🎲 Ôn tất cả từ HSK ${lv}</div>
-    <p class="guide-intro">Ôn ngẫu nhiên toàn bộ ${all.length} từ của cấp này (thứ tự sẽ khác nhau mỗi lần).</p>
+    <p class="guide-intro">Ôn ngẫu nhiên toàn bộ từ vựng HSK ${lv} (thứ tự sẽ khác nhau mỗi lần).</p>
+    <label class="onboard-label" style="display:block;margin-top:14px;">Số lượng từ ôn</label>
+    <div class="chip-row" id="lr-count-chips" style="flex-wrap:wrap;overflow:visible;">
+      <div class="chip ${levelReviewCount === 'all' ? 'active' : ''}" data-count="all">Tất cả (${all.length})</div>
+      ${LEVEL_REVIEW_COUNT_OPTIONS.map(n => `<div class="chip ${levelReviewCount === n ? 'active' : ''}" data-count="${n}">${n}</div>`).join('')}
+    </div>
     <label class="onboard-label" style="display:block;margin-top:14px;">Hình thức ôn tập</label>
     <div class="chip-row" id="lr-mode-chips">
       <div class="chip ${randomReviewMode === 'mcq' ? 'active' : ''}" data-mode="mcq">Trắc nghiệm</div>
       <div class="chip ${randomReviewMode === 'type' ? 'active' : ''}" data-mode="type">Gõ chữ Hán</div>
     </div>
     <button class="nav-btn primary" id="lr-start-btn" style="width:100%;margin-top:16px;" ${all.length === 0 ? 'disabled' : ''}>
-      ${all.length > 0 ? `Bắt đầu ôn (${all.length} từ)` : 'Cấp này chưa có từ'}
+      ${all.length > 0 ? `Bắt đầu ôn (${sampleSize} từ)` : 'Cấp này chưa có từ'}
     </button>
   `);
 
+  document.querySelectorAll('#lr-count-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      const v = chip.dataset.count;
+      levelReviewCount = v === 'all' ? 'all' : Number(v);
+      renderLevelReviewSheet(lv);
+    };
+  });
   document.querySelectorAll('#lr-mode-chips .chip').forEach(chip => {
     chip.onclick = () => {
       randomReviewMode = chip.dataset.mode;
@@ -1425,7 +1452,7 @@ function renderLevelReviewSheet(lv) {
   const startBtn = document.getElementById('lr-start-btn');
   if (startBtn && all.length > 0) {
     startBtn.onclick = () => {
-      const sample = shuffle(all);
+      const sample = shuffle(all).slice(0, sampleSize);
       closeSheet();
       startRandomReview(sample, randomReviewMode);
     };
