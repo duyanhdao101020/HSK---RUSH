@@ -1398,6 +1398,40 @@ function startRandomReview(words, mode) {
   });
 }
 
+/* Ôn ngẫu nhiên toàn bộ từ của MỘT cấp HSK cụ thể (mở từ trang cấp độ).
+   Mỗi lần vào sẽ xáo lại thứ tự khác nhau. Người dùng chọn trắc nghiệm hay gõ chữ. */
+function renderLevelReviewSheet(lv) {
+  const all = levelWords(lv);
+  showSheet(`
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">🎲 Ôn tất cả từ HSK ${lv}</div>
+    <p class="guide-intro">Ôn ngẫu nhiên toàn bộ ${all.length} từ của cấp này (thứ tự sẽ khác nhau mỗi lần).</p>
+    <label class="onboard-label" style="display:block;margin-top:14px;">Hình thức ôn tập</label>
+    <div class="chip-row" id="lr-mode-chips">
+      <div class="chip ${randomReviewMode === 'mcq' ? 'active' : ''}" data-mode="mcq">Trắc nghiệm</div>
+      <div class="chip ${randomReviewMode === 'type' ? 'active' : ''}" data-mode="type">Gõ chữ Hán</div>
+    </div>
+    <button class="nav-btn primary" id="lr-start-btn" style="width:100%;margin-top:16px;" ${all.length === 0 ? 'disabled' : ''}>
+      ${all.length > 0 ? `Bắt đầu ôn (${all.length} từ)` : 'Cấp này chưa có từ'}
+    </button>
+  `);
+
+  document.querySelectorAll('#lr-mode-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      randomReviewMode = chip.dataset.mode;
+      renderLevelReviewSheet(lv);
+    };
+  });
+  const startBtn = document.getElementById('lr-start-btn');
+  if (startBtn && all.length > 0) {
+    startBtn.onclick = () => {
+      const sample = shuffle(all);
+      closeSheet();
+      startRandomReview(sample, randomReviewMode);
+    };
+  }
+}
+
 /* ===================== router / state ===================== */
 const app = document.getElementById('app');
 const mainEl = document.getElementById('main');
@@ -1651,12 +1685,17 @@ function renderLevel() {
       </div>
       <div class="mode-card" data-mode="mcq">
         <div class="m-icon">选</div>
-        <div class="m-txt"><b>Ôn tập trắc nghiệm</b><span>${mcqHint}</span></div>
+        <div class="m-txt"><b>Ôn tập trắc nghiệm (theo từng bài)</b><span>${mcqHint}</span></div>
         <div class="m-arrow">›</div>
       </div>
       <div class="mode-card" data-mode="type">
         <div class="m-icon">写</div>
-        <div class="m-txt"><b>Ôn tập gõ chữ</b><span>${typeHint}</span></div>
+        <div class="m-txt"><b>Ôn tập gõ chữ (theo từng bài)</b><span>${typeHint}</span></div>
+        <div class="m-arrow">›</div>
+      </div>
+      <div class="mode-card" id="level-review-all-card">
+        <div class="m-icon">🎲</div>
+        <div class="m-txt"><b>Ôn tất cả từ HSK ${lv}</b><span>Ôn ngẫu nhiên toàn bộ từ vựng HSK ${lv}</span></div>
         <div class="m-arrow">›</div>
       </div>
     </div>
@@ -1672,6 +1711,8 @@ function renderLevel() {
   mainEl.querySelectorAll('.mode-card').forEach(card => {
     card.onclick = () => startMode(card.dataset.mode);
   });
+  const reviewAllCard = document.getElementById('level-review-all-card');
+  if (reviewAllCard) reviewAllCard.onclick = () => renderLevelReviewSheet(lv);
 }
 
 /* Tìm phiên học/ôn đang dang dở gần nhất (theo thời điểm cập nhật), dùng cho
