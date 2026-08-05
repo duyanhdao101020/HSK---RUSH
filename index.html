@@ -1028,6 +1028,11 @@ function allDataFlat() {
   return acc;
 }
 
+/* Số âm tiết = số ký tự Hán trong từ (mỗi chữ Hán = 1 âm tiết). */
+function charCount(word) {
+  return Array.from(word || '').length;
+}
+
 const SHUFFLE_KEY = 'hsk_shuffle_order_v1';
 function getShuffleOrder(level) {
   const total = levelWords(level).length;
@@ -1341,9 +1346,11 @@ function renderRandomReviewSheet() {
     perLevel[lv] = levelWords(lv).filter(w => seen.has(w.id)).length;
   }
   let pool = [];
+  let distractorPool = [];
   for (let lv = 1; lv <= 6; lv++) {
     if (!randomReviewLevels.has(lv)) continue;
     pool = pool.concat(levelWords(lv).filter(w => seen.has(w.id)));
+    distractorPool = distractorPool.concat(levelWords(lv));
   }
   const selectedCount = pool.length;
   const sampleSize = Math.min(selectedCount, randomReviewCount);
@@ -1397,18 +1404,18 @@ function renderRandomReviewSheet() {
     startBtn.onclick = () => {
       const sample = shuffle(pool).slice(0, sampleSize);
       closeSheet();
-      startRandomReview(sample, randomReviewMode);
+      startRandomReview(sample, randomReviewMode, distractorPool);
     };
   }
 }
 
-function startRandomReview(words, mode) {
+function startRandomReview(words, mode, distractorPool) {
   go(mode, {
     mode,
     level: null,
     bai: 'all',
     quizOrigin: 'random',
-    quiz: { words, idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now() }
+    quiz: { words, idx: 0, correct: 0, wrong: [], answered: false, times: [], startTime: Date.now(), pool: distractorPool || words }
   });
 }
 
@@ -1454,7 +1461,7 @@ function renderLevelReviewSheet(lv) {
     startBtn.onclick = () => {
       const sample = shuffle(all).slice(0, sampleSize);
       closeSheet();
-      startRandomReview(sample, randomReviewMode);
+      startRandomReview(sample, randomReviewMode, all);
     };
   }
 }
@@ -1914,11 +1921,18 @@ function renderMCQ() {
   if (q.idx >= q.words.length) return go('result');
   const w = q.words[q.idx];
   if (!q.options || q._optFor !== q.idx) {
-    let pool = state.level ? wordsFor(state.level, state.bai) : q.words;
-    let distractorsPool = pool.filter(x => x.id !== w.id && x.word !== w.word);
+    const wLen = charCount(w.word);
+    let basePool = q.pool || (state.level ? wordsFor(state.level, state.bai) : q.words);
+    let distractorsPool = basePool.filter(x => x.id !== w.id && x.word !== w.word && charCount(x.word) === wLen);
     if (distractorsPool.length < 3) {
-      pool = state.level ? levelWords(state.level) : allDataFlat();
-      distractorsPool = pool.filter(x => x.id !== w.id && x.word !== w.word);
+      distractorsPool = basePool.filter(x => x.id !== w.id && x.word !== w.word);
+    }
+    if (distractorsPool.length < 3) {
+      basePool = state.level ? levelWords(state.level) : allDataFlat();
+      distractorsPool = basePool.filter(x => x.id !== w.id && x.word !== w.word && charCount(x.word) === wLen);
+      if (distractorsPool.length < 3) {
+        distractorsPool = basePool.filter(x => x.id !== w.id && x.word !== w.word);
+      }
     }
     const seenWords = new Set([w.word]);
     const distractors = [];
