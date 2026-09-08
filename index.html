@@ -1993,14 +1993,12 @@ function answerMCQ(btn, w, q) {
     b.disabled = true;
     if (b.dataset.id === w.id) b.classList.add('correct');
     else if (b === btn) b.classList.add('incorrect');
-    if (!isCorrect) {
-      const optWord = q.options.find(o => o.id === b.dataset.id);
-      if (optWord && optWord.word_pinyin) {
-        const py = document.createElement('div');
-        py.className = 'mcq-opt-py';
-        py.textContent = optWord.word_pinyin;
-        b.appendChild(py);
-      }
+    const optWord = q.options.find(o => o.id === b.dataset.id);
+    if (optWord && optWord.word_pinyin) {
+      const py = document.createElement('div');
+      py.className = 'mcq-opt-py';
+      py.textContent = optWord.word_pinyin;
+      b.appendChild(py);
     }
   });
   speak(speechTextFor(w), audioPathFor(w, false));
