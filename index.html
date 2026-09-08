@@ -2026,15 +2026,14 @@ function answerMCQ(btn, w, q) {
   if (isCorrect) {
     q.correct++;
     removeFromDifficultBook(w.id);
-    setTimeout(goNext, 850);
   } else {
     q.wrong.push(w);
     incrementWrong(w.id);
-    const wrap = document.getElementById('mcq-continue-wrap');
-    if (wrap) {
-      wrap.innerHTML = `<button class="nav-btn primary" id="mcq-next-btn" style="width:100%;margin-top:14px;">Từ tiếp theo ›</button>`;
-      document.getElementById('mcq-next-btn').onclick = goNext;
-    }
+  }
+  const wrap = document.getElementById('mcq-continue-wrap');
+  if (wrap) {
+    wrap.innerHTML = `<button class="nav-btn primary" id="mcq-next-btn" style="width:100%;margin-top:14px;">Từ tiếp theo ›</button>`;
+    document.getElementById('mcq-next-btn').onclick = goNext;
   }
 }
 
