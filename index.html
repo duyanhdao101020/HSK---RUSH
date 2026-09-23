@@ -2117,7 +2117,10 @@ function renderType() {
     }
     document.getElementById('check-btn').onclick = submit;
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') submit();
+      if (e.key !== 'Enter') return;
+      if (e.isComposing || e.keyCode === 229) return; // Enter dùng để chọn chữ trong bộ gõ, chưa phải xác nhận đáp án
+      e.stopPropagation(); // tránh để listener Enter toàn cục (dùng để "Câu tiếp theo") xử lý luôn cùng một phím Enter này
+      submit();
     });
   } else {
     // Advancing must happen synchronously inside this tap handler (no setTimeout)
